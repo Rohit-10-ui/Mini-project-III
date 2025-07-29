@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sign Up | Phishing Detection App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #f4f7fa;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+    .signup-container {
+      background: #fff;
+      padding: 2rem 2.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+      width: 350px;
+      max-width: 90vw;
+    }
+    .signup-container h2 {
+      margin-bottom: 1.5rem;
+      color: #333;
+      text-align: center;
+    }
+    .signup-container label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+    .signup-container input[type="email"],
+    .signup-container input[type="password"] {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1.2rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+    .signup-container button {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0768ac;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .signup-container button:hover {
+      background: #055a91;
+    }
+    .signup-container .login-link {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.97rem;
+    }
+    .signup-container .login-link a {
+      color: #0768ac;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .signup-container .login-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+  <script>
+    function validateForm(event) {
+      const pwd = document.getElementById('password').value;
+      const cpwd = document.getElementById('confirm-password').value;
+      if (pwd !== cpwd) {
+        event.preventDefault();
+        alert("Passwords do not match!");
+        return false;
+      }
+      return true;
+    }
+  </script>
+</head>
+<body>
+  <form class="signup-container" method="POST" action="/api/signup" onsubmit="validateForm(event)">
+    <h2>Sign Up</h2>
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" required placeholder="Enter your email">
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required placeholder="Enter your password">
+
+    <label for="confirm-password">Confirm Password</label>
+    <input type="password" id="confirm-password" name="confirm-password" required placeholder="Confirm your password">
+
+    <button type="submit">Sign Up</button>
+    <div class="login-link">
+      Already have an account? <a href="login.html">Login</a>
+    </div>
+  </form>
+</body>
+</html>
