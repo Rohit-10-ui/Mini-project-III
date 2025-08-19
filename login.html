@@ -2,86 +2,198 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login | PhishGuard:A Real-Time Phishing Detection System</title>
+  <title>Login | PhishGuard - Real-Time Phishing Detection System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      background: #f4f7fa;
-      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       height: 100vh;
       align-items: center;
       justify-content: center;
+      margin: 0;
     }
     .login-container {
-      background: #fff;
-      padding: 2rem 2.5rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.12);
-      width: 350px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      width: 400px;
       max-width: 90vw;
+      animation: fadeInUp 0.6s ease;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     .login-container h2 {
-      margin-bottom: 1.5rem;
-      color: #333;
+      margin-bottom: 2rem;
+      color: #4a5568;
       text-align: center;
+      font-size: 2rem;
+      font-weight: 600;
+    }
+    .login-container h2::before {
+      content: '🛡️';
+      display: block;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
     }
     .login-container label {
       display: block;
       margin-bottom: 0.5rem;
-      color: #555;
+      color: #4a5568;
+      font-weight: 500;
     }
     .login-container input[type="email"],
     .login-container input[type="password"] {
       width: 100%;
-      padding: 0.75rem;
-      margin-bottom: 1.2rem;
-      border: 1px solid #ddd;
-      border-radius: 5px;
+      padding: 0.875rem;
+      margin-bottom: 1.5rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
       font-size: 1rem;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+    .login-container input[type="email"]:focus,
+    .login-container input[type="password"]:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     .login-container button {
       width: 100%;
-      padding: 0.75rem;
-      background: #0768ac;
-      color: #fff;
+      padding: 0.875rem;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
       border: none;
-      border-radius: 5px;
-      font-size: 1.05rem;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.3s ease;
     }
     .login-container button:hover {
-      background: #055a91;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
     }
     .login-container .signup-link {
-      margin-top: 1rem;
+      margin-top: 1.5rem;
       text-align: center;
-      font-size: 0.97rem;
+      font-size: 1rem;
     }
     .login-container .signup-link a {
-      color: #0768ac;
+      color: #667eea;
       text-decoration: none;
       font-weight: bold;
+      transition: color 0.3s ease;
     }
     .login-container .signup-link a:hover {
+      color: #764ba2;
       text-decoration: underline;
+    }
+    .back-home {
+      position: absolute;
+      top: 30px;
+      left: 30px;
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 25px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    .back-home:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <form class="login-container" method="POST" action="/api/login">
-    <h2>Login</h2>
+  <a href="homepage.html" class="back-home">← Back to Home</a>
+  
+  <form class="login-container" id="loginForm">
+    <h2>Login to PhishGuard</h2>
     <label for="email">Email</label>
-    <input type="email" id="email" name="email" required placeholder="Enter your email">
+    <input type="email" id="email" name="email" required placeholder="Enter your email" value="user@example.com">
 
     <label for="password">Password</label>
-    <input type="password" id="password" name="password" required placeholder="Enter your password">
+    <input type="password" id="password" name="password" required placeholder="Enter your password" value="password123">
 
     <button type="submit">Login</button>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Logging you in...</p>
+    </div>
+    
     <div class="signup-link">
       Don't have an account? <a href="signup.html">Sign Up</a>
     </div>
   </form>
+<script>
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const loadingDiv = document.getElementById('loading');
+    const submitButton = this.querySelector('button[type="submit"]');
+    submitButton.style.display = 'none';
+    loadingDiv.style.display = 'block';
+    fetch('http://localhost:3019/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.username) {
+        sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem('username', data.username);
+        sessionStorage.setItem('userEmail', email);
+        window.location.href = 'homepage.html';
+      } else {
+        alert(data.message);
+        submitButton.style.display = 'block';
+        loadingDiv.style.display = 'none';
+      }
+    })
+    .catch(err => {
+      alert("Login failed: " + err.message);
+      submitButton.style.display = 'block';
+      loadingDiv.style.display = 'none';
+    });
+  });
+</script>
 </body>
 </html>

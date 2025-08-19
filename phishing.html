@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Detection Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .nav-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .tool-section {
+            padding: 40px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .scan-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .scan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+
+        .guide-section {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .guide-title {
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+        }
+
+        .guide-item {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #667eea;
+        }
+
+        .guide-item h3 {
+            color: #667eea;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+
+        .example-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .warning-box {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            color: #721c24;
+        }
+
+        .safe {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .suspicious {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .moderate {
+            color: #ffc107;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ PhishGuard Detection Tool</h1>
+            <p>Analyze URLs, emails, and messages to stay protected from phishing attacks</p>
+            <div class="nav-bar">
+                <a href="homepage.html" class="nav-btn">← Back to Home</a>
+                <a href="dashboard.html" class="nav-btn">Dashboard</a>
+            </div>
+        </div>
+
+        <div class="tool-section">
+            <div class="form-group">
+                <label for="analysisType">Select Analysis Type:</label>
+                <select id="analysisType">
+                    <option value="url">URL Analysis</option>
+                    <option value="email">Email Analysis</option>
+                    <option value="message">Message Analysis</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="inputText">Enter content to analyze:</label>
+                <textarea id="inputText" placeholder="Paste your URL, email content, or message here..."></textarea>
+            </div>
+
+            <button class="scan-button" onclick="analyzeContent()">🔍 Scan for Phishing</button>
+
+            <div class="form-group">
+                <label>Analysis Result:</label>
+                <div id="resultBox" class="result-box">Results will appear here after scanning...</div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h2 class="guide-title">📚 How to Use This Tool</h2>
+
+            <div class="guide-item">
+                <h3>🔗 URL Analysis</h3>
+                <p>Use this to check suspicious links before clicking them. The tool will analyze the URL structure, domain reputation, and common phishing patterns.</p>
+                
+                <div class="example-box">
+                    <strong>Example URLs to test:</strong><br>
+                    Suspicious: http://paypal-security-update.suspicious-domain.com/login<br>
+                    Legitimate: https://www.paypal.com/signin<br>
+                    Suspicious: https://amaz0n-prime-renewal.net/account
+                </div>
+
+                <div class="warning-box">
+                    <strong>Red Flags:</strong> Misspelled domains, unusual subdomains, non-HTTPS connections, URL shorteners, suspicious TLDs (.tk, .ml, etc.)
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <h3>📧 Email Analysis</h3>
+                <p>Paste the entire email content including headers if possible. The tool will check for common phishing tactics, suspicious links, and social engineering techniques.</p>
+                
+                <div class="example-box">
+                    <strong>Example suspicious email:</strong><br>
+                    "URGENT: Your account has been compromised! Click here immediately to verify: http://fake-bank.com/verify<br><br>
+                    From: security@yourbankk.com"
+                </div>
+
+                <div class="warning-box">
+                    <strong>Red Flags:</strong> Urgent language, grammar errors, mismatched sender domains, suspicious attachments, requests for personal information
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <h3>💬 Message Analysis</h3>
+                <p>Analyze text messages, social media messages, or chat content for phishing attempts. This includes SMS phishing (smishing) and social media scams.</p>
+                
+                <div class="example-box">
+                    <strong>Example suspicious message:</strong><br>
+                    "Congratulations! You've won $1000! Claim now by clicking: bit.ly/fake-prize and entering your SSN"
+                </div>
+
+                <div class="warning-box">
+                    <strong>Red Flags:</strong> Too-good-to-be-true offers, requests for sensitive information, shortened URLs, pressure tactics, poor grammar
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <h3>🎯 General Tips</h3>
+                <p>
+                    • Always verify the sender through official channels<br>
+                    • Look for HTTPS and proper SSL certificates<br>
+                    • Be suspicious of urgent or threatening language<br>
+                    • Never provide personal information via email or text<br>
+                    • When in doubt, contact the organization directly<br>
+                    • Use official apps and websites, not links from messages
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function analyzeContent() {
+            const analysisType = document.getElementById('analysisType').value;
+            const inputText = document.getElementById('inputText').value.trim();
+            const resultBox = document.getElementById('resultBox');
+
+            if (!inputText) {
+                resultBox.innerHTML = '<span class="suspicious">⚠️ Please enter content to analyze</span>';
+                return;
+            }
+
+            let result = '';
+            let riskLevel = 'safe';
+
+            switch(analysisType) {
+                case 'url':
+                    result = analyzeURL(inputText);
+                    break;
+                case 'email':
+                    result = analyzeEmail(inputText);
+                    break;
+                case 'message':
+                    result = analyzeMessage(inputText);
+                    break;
+            }
+
+            resultBox.innerHTML = result;
+        }
+
+        function analyzeURL(url) {
+            let risks = [];
+            let riskLevel = 'safe';
+
+            // Basic URL validation
+            try {
+                const urlObj = new URL(url.startsWith('http') ? url : 'http://' + url);
+                
+                // Check for HTTPS
+                if (urlObj.protocol !== 'https:') {
+                    risks.push('• Not using secure HTTPS connection');
+                    riskLevel = 'moderate';
+                }
+
+                // Check for suspicious patterns
+                const suspiciousDomains = ['paypal-security', 'amazon-prime', 'apple-id', 'microsoft-support', 'bank-verify'];
+                const domain = urlObj.hostname.toLowerCase();
+                
+                suspiciousDomains.forEach(suspicious => {
+                    if (domain.includes(suspicious)) {
+                        risks.push(`• Contains suspicious domain pattern: ${suspicious}`);
+                        riskLevel = 'suspicious';
+                    }
+                });
+
+                // Check for character substitution
+                if (/[0-9]/.test(domain.replace(/www\./, ''))) {
+                    const commonSubs = domain.match(/[0-9]/g);
+                    if (commonSubs) {
+                        risks.push('• Contains number substitutions in domain name');
+                        riskLevel = 'moderate';
+                    }
+                }
+
+                // Check for suspicious TLDs
+                const suspiciousTlds = ['.tk', '.ml', '.ga', '.cf'];
+                suspiciousTlds.forEach(tld => {
+                    if (domain.endsWith(tld)) {
+                        risks.push(`• Uses suspicious top-level domain: ${tld}`);
+                        riskLevel = 'suspicious';
+                    }
+                });
+
+                // Check for URL shorteners
+                const shorteners = ['bit.ly', 'tinyurl.com', 't.co', 'short.link'];
+                shorteners.forEach(shortener => {
+                    if (domain.includes(shortener)) {
+                        risks.push('• Uses URL shortener (could hide real destination)');
+                        riskLevel = 'moderate';
+                    }
+                });
+
+            } catch (e) {
+                return '<span class="suspicious">❌ INVALID URL FORMAT</span>\n\nThe provided text is not a valid URL.';
+            }
+
+            let result = `📊 URL ANALYSIS RESULTS\n\nAnalyzed URL: ${url}\n\n`;
+            
+            if (risks.length === 0) {
+                result += '<span class="safe">✅ NO OBVIOUS PHISHING INDICATORS DETECTED</span>\n\nThis URL appears to be safe, but always exercise caution.';
+            } else {
+                const levelText = riskLevel === 'suspicious' ? 'HIGH RISK' : 'MODERATE RISK';
+                const emoji = riskLevel === 'suspicious' ? '🚨' : '⚠️';
+                result += `<span class="${riskLevel}">${emoji} ${levelText} - POTENTIAL PHISHING INDICATORS:</span>\n\n`;
+                result += risks.join('\n');
+                result += '\n\n❗ Recommendation: Do not click this link. Verify through official channels.';
+            }
+
+            return result;
+        }
+
+        function analyzeEmail(email) {
+            let risks = [];
+            let riskLevel = 'safe';
+
+            const lowercaseEmail = email.toLowerCase();
+
+            // Check for urgent language
+            const urgentWords = ['urgent', 'immediate', 'expires today', 'act now', 'limited time', 'suspended', 'verify now', 'click here now'];
+            urgentWords.forEach(word => {
+                if (lowercaseEmail.includes(word)) {
+                    risks.push(`• Contains urgent language: "${word}"`);
+                    riskLevel = 'moderate';
+                }
+            });
+
+            // Check for suspicious requests
+            const suspiciousRequests = ['ssn', 'social security', 'password', 'pin number', 'account number', 'credit card'];
+            suspiciousRequests.forEach(request => {
+                if (lowercaseEmail.includes(request)) {
+                    risks.push(`• Requests sensitive information: ${request}`);
+                    riskLevel = 'suspicious';
+                }
+            });
+
+            // Check for grammar issues (simple check)
+            const grammarIssues = lowercaseEmail.match(/\b(recieve|seperate|there account|you're account|its urgent)\b/g);
+            if (grammarIssues) {
+                risks.push('• Contains grammar/spelling errors');
+                riskLevel = 'moderate';
+            }
+
+            // Check for suspicious links
+            const urlPattern = /https?:\/\/[^\s]+/g;
+            const urls = email.match(urlPattern);
+            if (urls) {
+                urls.forEach(url => {
+                    if (url.includes('bit.ly') || url.includes('tinyurl') || url.includes('t.co')) {
+                        risks.push('• Contains shortened URLs');
+                        riskLevel = 'suspicious';
+                    }
+                });
+            }
+
+            let result = `📧 EMAIL ANALYSIS RESULTS\n\n`;
+            
+            if (risks.length === 0) {
+                result += '<span class="safe">✅ NO OBVIOUS PHISHING INDICATORS DETECTED</span>\n\nThis email appears to be safe, but always verify sender identity.';
+            } else {
+                const levelText = riskLevel === 'suspicious' ? 'HIGH RISK' : 'MODERATE RISK';
+                const emoji = riskLevel === 'suspicious' ? '🚨' : '⚠️';
+                result += `<span class="${riskLevel}">${emoji} ${levelText} - POTENTIAL PHISHING INDICATORS:</span>\n\n`;
+                result += risks.join('\n');
+                result += '\n\n❗ Recommendation: Do not respond or click links. Verify through official channels.';
+            }
+
+            return result;
+        }
+
+        function analyzeMessage(message) {
+            let risks = [];
+            let riskLevel = 'safe';
+
+            const lowercaseMsg = message.toLowerCase();
+
+            // Check for prize/lottery scams
+            const prizeWords = ['congratulations', 'winner', 'won', 'prize', 'lottery', 'jackpot', 'claim now'];
+            prizeWords.forEach(word => {
+                if (lowercaseMsg.includes(word)) {
+                    risks.push(`• Contains prize/lottery language: "${word}"`);
+                    riskLevel = 'suspicious';
+                }
+            });
+
+            // Check for financial requests
+            const moneyWords = ['send money', 'wire transfer', 'bitcoin', 'gift card', 'processing fee', 'tax payment'];
+            moneyWords.forEach(word => {
+                if (lowercaseMsg.includes(word)) {
+                    risks.push(`• Requests money/payment: "${word}"`);
+                    riskLevel = 'suspicious';
+                }
+            });
+
+            // Check for personal info requests
+            const infoWords = ['social security', 'ssn', 'date of birth', 'mother maiden name', 'account number'];
+            infoWords.forEach(word => {
+                if (lowercaseMsg.includes(word)) {
+                    risks.push(`• Requests personal information: "${word}"`);
+                    riskLevel = 'suspicious';
+                }
+            });
+
+            // Check for pressure tactics
+            const pressureWords = ['expires today', 'last chance', 'act fast', 'limited time', 'hurry'];
+            pressureWords.forEach(word => {
+                if (lowercaseMsg.includes(word)) {
+                    risks.push(`• Uses pressure tactics: "${word}"`);
+                    riskLevel = 'moderate';
+                }
+            });
+
+            let result = `💬 MESSAGE ANALYSIS RESULTS\n\n`;
+            
+            if (risks.length === 0) {
+                result += '<span class="safe">✅ NO OBVIOUS PHISHING INDICATORS DETECTED</span>\n\nThis message appears to be safe, but stay vigilant.';
+            } else {
+                const levelText = riskLevel === 'suspicious' ? 'HIGH RISK' : 'MODERATE RISK';
+                const emoji = riskLevel === 'suspicious' ? '🚨' : '⚠️';
+                result += `<span class="${riskLevel}">${emoji} ${levelText} - POTENTIAL PHISHING INDICATORS:</span>\n\n`;
+                result += risks.join('\n');
+                result += '\n\n❗ Recommendation: Delete this message. Never provide personal/financial information.';
+            }
+
+            return result;
+        }
+
+        // Auto-resize textarea
+        document.getElementById('inputText').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    </script>
+</body>
+</html>
