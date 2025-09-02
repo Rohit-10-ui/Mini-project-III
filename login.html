@@ -1,175 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Login | PhishGuard - Real-Time Phishing Detection System</title>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>Login | PhishGuard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6fb;
+      font-family: system-ui, sans-serif;
       display: flex;
       height: 100vh;
       align-items: center;
       justify-content: center;
       margin: 0;
+      color: #2d3748;
     }
     .login-container {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 2.5rem;
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-      width: 400px;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      width: 360px;
       max-width: 90vw;
-      animation: fadeInUp 0.6s ease;
+      animation: fadeIn 0.4s ease;
     }
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .login-container h2 {
-      margin-bottom: 2rem;
-      color: #4a5568;
-      text-align: center;
-      font-size: 2rem;
-      font-weight: 600;
-    }
-    .login-container h2::before {
-      content: '🛡️';
-      display: block;
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-    }
-    .login-container label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: #4a5568;
-      font-weight: 500;
-    }
-    .login-container input[type="email"],
-    .login-container input[type="password"] {
-      width: 100%;
-      padding: 0.875rem;
       margin-bottom: 1.5rem;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1a202c;
+    }
+    .login-container p.subtitle {
+      text-align: center;
+      color: #718096;
+      font-size: 0.95rem;
+      margin-top: -10px;
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
       font-size: 1rem;
-      transition: all 0.3s ease;
       box-sizing: border-box;
     }
-    .login-container input[type="email"]:focus,
-    .login-container input[type="password"]:focus {
+    input:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: #4c6ef5;
+      box-shadow: 0 0 0 3px rgba(76,110,245,0.15);
     }
-    .login-container button {
+    button {
       width: 100%;
-      padding: 0.875rem;
-      background: linear-gradient(45deg, #667eea, #764ba2);
+      padding: 0.8rem;
+      background: #4c6ef5;
       color: white;
       border: none;
-      border-radius: 10px;
-      font-size: 1.1rem;
+      border-radius: 8px;
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: background 0.2s ease;
     }
-    .login-container button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    button:hover {
+      background: #3b5bdb;
     }
-    .login-container .signup-link {
-      margin-top: 1.5rem;
+    .signup-link {
+      margin-top: 1rem;
       text-align: center;
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
-    .login-container .signup-link a {
-      color: #667eea;
+    .signup-link a {
+      color: #4c6ef5;
       text-decoration: none;
-      font-weight: bold;
-      transition: color 0.3s ease;
+      font-weight: 500;
     }
-    .login-container .signup-link a:hover {
-      color: #764ba2;
+    .signup-link a:hover {
       text-decoration: underline;
     }
     .back-home {
       position: absolute;
-      top: 30px;
-      left: 30px;
-      color: white;
+      top: 20px;
+      left: 20px;
+      font-size: 0.9rem;
       text-decoration: none;
-      font-weight: 600;
-      padding: 10px 20px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 25px;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
-    }
-    .back-home:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
+      color: #4c6ef5;
     }
     .loading {
       display: none;
       text-align: center;
       margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #4a5568;
     }
     .spinner {
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #667eea;
+      border: 2px solid #edf2f7;
+      border-top: 2px solid #4c6ef5;
       border-radius: 50%;
-      width: 30px;
-      height: 30px;
+      width: 24px;
+      height: 24px;
       animation: spin 1s linear infinite;
-      margin: 0 auto;
+      margin: 0 auto 0.5rem auto;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <a href="homepage.html" class="back-home">← Back to Home</a>
+  <a href="/homepage" class="back-home">← Back</a>
   
   <form class="login-container" id="loginForm">
-    <h2>Login to PhishGuard</h2>
-    <label for="email">Email</label>
-    <input type="email" id="email" name="email" required placeholder="Enter your email" value="user@example.com">
+    <h2>Welcome back</h2>
+    <p class="subtitle">Log in to continue using PhishGuard</p>
+
+    <label for="email">Email address</label>
+    <input type="email" id="email" name="email" required="" placeholder="you@example.com">
 
     <label for="password">Password</label>
-    <input type="password" id="password" name="password" required placeholder="Enter your password" value="password123">
+    <input type="password" id="password" name="password" required="" placeholder="Enter your password">
 
-    <button type="submit">Login</button>
+    <button type="submit">Log in</button>
     
     <div class="loading" id="loading">
       <div class="spinner"></div>
-      <p>Logging you in...</p>
+      <p>Hang tight, we’re getting things ready 😊</p>
     </div>
     
     <div class="signup-link">
-      Don't have an account? <a href="signup.html">Sign Up</a>
+      New here? <a href="/signup">Create an account</a>
+      or <a href="/auth/google" class="google-btn">Login with Google</a>
     </div>
   </form>
+
 <script>
   document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
-
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const loadingDiv = document.getElementById('loading');
     const submitButton = this.querySelector('button[type="submit"]');
+
     submitButton.style.display = 'none';
     loadingDiv.style.display = 'block';
+
     fetch('http://localhost:3019/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -183,17 +166,18 @@
         sessionStorage.setItem('userEmail', email);
         window.location.href = 'homepage.html';
       } else {
-        alert(data.message);
+        alert(data.message || "Login failed. Please try again.");
         submitButton.style.display = 'block';
         loadingDiv.style.display = 'none';
       }
     })
     .catch(err => {
-      alert("Login failed: " + err.message);
+      alert("Something went wrong: " + err.message);
       submitButton.style.display = 'block';
       loadingDiv.style.display = 'none';
     });
   });
 </script>
-</body>
-</html>
+
+
+</body></html>

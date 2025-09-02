@@ -1,268 +1,245 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Sign Up | PhishGuard - Real-Time Phishing Detection System</title>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>Sign Up | PhishGuard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f7f9fc;
+      font-family: system-ui, sans-serif;
       display: flex;
       height: 100vh;
       align-items: center;
       justify-content: center;
       margin: 0;
+      color: #2d3748;
     }
     .signup-container {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 2.5rem;
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-      width: 400px;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      width: 360px;
       max-width: 90vw;
-      animation: fadeInUp 0.6s ease;
+      animation: fadeIn 0.4s ease;
     }
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .signup-container h2 {
-      margin-bottom: 2rem;
-      color: #4a5568;
-      text-align: center;
-      font-size: 2rem;
-      font-weight: 600;
-    }
-    .signup-container h2::before {
-      content: '🛡️';
-      display: block;
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-    }
-    .signup-container label {
-      display: block;
       margin-bottom: 0.5rem;
-      color: #4a5568;
-      font-weight: 500;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1a202c;
     }
-    .signup-container input[type="email"],
-    .signup-container input[type="password"] {
-      width: 100%;
-      padding: 0.875rem;
+    .signup-container p.subtitle {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #718096;
       margin-bottom: 1.5rem;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
       font-size: 1rem;
-      transition: all 0.3s ease;
       box-sizing: border-box;
     }
-    .signup-container input[type="email"]:focus,
-    .signup-container input[type="password"]:focus {
+    input:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: #4c6ef5;
+      box-shadow: 0 0 0 3px rgba(76,110,245,0.12);
     }
-    .signup-container button {
+    button {
       width: 100%;
-      padding: 0.875rem;
-      background: linear-gradient(45deg, #667eea, #764ba2);
+      padding: 0.8rem;
+      background: #4c6ef5;
       color: white;
       border: none;
-      border-radius: 10px;
-      font-size: 1.1rem;
+      border-radius: 8px;
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: background 0.2s ease;
     }
-    .signup-container button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    button:hover {
+      background: #3b5bdb;
     }
-    .signup-container .login-link {
-      margin-top: 1.5rem;
+    .login-link {
+      margin-top: 1rem;
       text-align: center;
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
-    .signup-container .login-link a {
-      color: #667eea;
+    .login-link a {
+      color: #4c6ef5;
       text-decoration: none;
-      font-weight: bold;
-      transition: color 0.3s ease;
+      font-weight: 500;
     }
-    .signup-container .login-link a:hover {
-      color: #764ba2;
+    .login-link a:hover {
       text-decoration: underline;
     }
     .back-home {
       position: absolute;
-      top: 30px;
-      left: 30px;
-      color: white;
+      top: 20px;
+      left: 20px;
+      font-size: 0.9rem;
       text-decoration: none;
-      font-weight: 600;
-      padding: 10px 20px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 25px;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
-    }
-    .back-home:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
+      color: #4c6ef5;
     }
     .loading {
       display: none;
       text-align: center;
       margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #4a5568;
     }
     .spinner {
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #667eea;
+      border: 2px solid #edf2f7;
+      border-top: 2px solid #4c6ef5;
       border-radius: 50%;
-      width: 30px;
-      height: 30px;
+      width: 24px;
+      height: 24px;
       animation: spin 1s linear infinite;
-      margin: 0 auto;
+      margin: 0 auto 0.5rem auto;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .password-strength {
-      font-size: 0.9rem;
-      margin-top: -1rem;
+      font-size: 0.85rem;
+      margin-top: -0.5rem;
       margin-bottom: 1rem;
-      padding: 0.5rem;
-      border-radius: 5px;
-      transition: all 0.3s ease;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
     }
     .strength-weak {
-      background: #fed7d7;
+      background: #ffe5e5;
       color: #c53030;
     }
     .strength-medium {
-      background: #fef5e7;
-      color: #d69e2e;
+      background: #fff7e5;
+      color: #b7791f;
     }
     .strength-strong {
-      background: #c6f6d5;
-      color: #38a169;
+      background: #e6fffa;
+      color: #2f855a;
     }
   </style>
 </head>
 <body>
-  <a href="homepage.html" class="back-home">← Back to Home</a>
+  <a href="/homepage" class="back-home">← Back</a>
   
   <form class="signup-container" id="signupForm">
-    <h2>Join PhishGuard</h2>
-    <label for="email">Email</label>
-    <input type="email" id="email" name="email" required placeholder="Enter your email" value="newuser@example.com">
+    <h2>Create your account</h2>
+    <p class="subtitle">It only takes a minute to get started</p>
+
+    <label for="email">Email address</label>
+    <input type="email" id="email" name="email" required="" placeholder="you@example.com">
 
     <label for="password">Password</label>
-    <input type="password" id="password" name="password" required placeholder="Enter your password" value="newpassword123">
+    <input type="password" id="password" name="password" required="" placeholder="At least 8 characters">
     <div id="passwordStrength" class="password-strength" style="display: none;"></div>
 
-    <label for="confirm-password">Confirm Password</label>
-    <input type="password" id="confirm-password" name="confirm-password" required placeholder="Confirm your password" value="newpassword123">
+    <label for="confirm-password">Confirm password</label>
+    <input type="password" id="confirm-password" name="confirm-password" required="" placeholder="Re-enter password">
 
-    <button type="submit">Sign Up</button>
+    <button type="submit">Sign up</button>
     
     <div class="loading" id="loading">
       <div class="spinner"></div>
-      <p>Creating your account...</p>
+      <p>Setting up your account…</p>
     </div>
     
     <div class="login-link">
-      Already have an account? <a href="login.html">Login</a>
+      Already have an account? <a href="/login">Log in</a>
     </div>
   </form>
 
-  <script>
-  // Password strength checker
-  document.getElementById('password').addEventListener('input', function() {
-    const password = this.value;
-    const strengthDiv = document.getElementById('passwordStrength');
-    
-    if (password.length === 0) {
-      strengthDiv.style.display = 'none';
-      return;
-    }
+<script>
+// Password strength checker
+document.getElementById('password').addEventListener('input', function() {
+  const password = this.value;
+  const strengthDiv = document.getElementById('passwordStrength');
+  
+  if (password.length === 0) {
+    strengthDiv.style.display = 'none';
+    return;
+  }
 
-    strengthDiv.style.display = 'block';
-    let strength = 0;
-    if (password.length >= 8) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[a-z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^A-Za-z0-9]/.test(password)) strength++;
+  strengthDiv.style.display = 'block';
+  let strength = 0;
+  if (password.length >= 8) strength++;
+  if (/[A-Z]/.test(password)) strength++;
+  if (/[a-z]/.test(password)) strength++;
+  if (/[0-9]/.test(password)) strength++;
+  if (/[^A-Za-z0-9]/.test(password)) strength++;
 
-    strengthDiv.className = 'password-strength';
-    
-    if (strength < 3) {
-      strengthDiv.classList.add('strength-weak');
-      strengthDiv.textContent = 'Weak password - Add uppercase, numbers, or symbols';
-    } else if (strength < 4) {
-      strengthDiv.classList.add('strength-medium');
-      strengthDiv.textContent = 'Medium strength - Consider adding more complexity';
+  strengthDiv.className = 'password-strength';
+  
+  if (strength < 3) {
+    strengthDiv.classList.add('strength-weak');
+    strengthDiv.textContent = 'Weak — try mixing upper/lowercase, numbers, or symbols';
+  } else if (strength < 4) {
+    strengthDiv.classList.add('strength-medium');
+    strengthDiv.textContent = 'Medium — stronger than most, but could be better';
+  } else {
+    strengthDiv.classList.add('strength-strong');
+    strengthDiv.textContent = 'Strong password 👍';
+  }
+});
+
+// Signup form handler
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirm-password').value;
+  const loadingDiv = document.getElementById('loading');
+  const submitButton = this.querySelector('button[type="submit"]');
+
+  if (password !== confirmPassword) {
+    alert("Passwords don’t match. Please try again.");
+    return;
+  }
+
+  submitButton.style.display = 'none';
+  loadingDiv.style.display = 'block';
+
+  fetch('http://localhost:3019/api/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.message === "Signup success") {
+      const username = email.split('@')[0];
+      sessionStorage.setItem('isLoggedIn', 'true');
+      sessionStorage.setItem('username', username);
+      sessionStorage.setItem('userEmail', email);
+      window.location.href = 'homepage.html';
     } else {
-      strengthDiv.classList.add('strength-strong');
-      strengthDiv.textContent = 'Strong password!';
-    }
-  });
-
-  // Signup form handler
-  document.getElementById('signupForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirm-password').value;
-    const loadingDiv = document.getElementById('loading');
-    const submitButton = this.querySelector('button[type="submit"]');
-
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-
-    submitButton.style.display = 'none';
-    loadingDiv.style.display = 'block';
-
-    // ✅ REAL API CALL
-    fetch('http://localhost:3019/api/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.message === "Signup success") {
-        const username = email.split('@')[0];
-        sessionStorage.setItem('isLoggedIn', 'true');
-        sessionStorage.setItem('username', username);
-        sessionStorage.setItem('userEmail', email);
-        window.location.href = 'homepage.html';
-      } else {
-        alert(data.message);
-        submitButton.style.display = 'block';
-        loadingDiv.style.display = 'none';
-      }
-    })
-    .catch(err => {
-      alert("Signup failed: " + err.message);
+      alert(data.message);
       submitButton.style.display = 'block';
       loadingDiv.style.display = 'none';
-    });
+    }
+  })
+  .catch(err => {
+    alert("Something went wrong: " + err.message);
+    submitButton.style.display = 'block';
+    loadingDiv.style.display = 'none';
   });
+});
 </script>
 
-</body>
-</html>
+
+</body></html>
