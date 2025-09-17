@@ -92,10 +92,16 @@
       cursor: pointer;
       font-size: 16px;
       font-weight: bold;
+      transition: background 0.3s;
     }
 
     button:hover {
       background: #256029;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
     }
 
     .result-box {
@@ -105,6 +111,46 @@
       min-height: 60px;
       background: #fafafa;
       font-size: 14px;
+    }
+
+    /* Result styling based on risk level */
+    .result-box.safe {
+      background: #e8f5e9;
+      border-color: #4caf50;
+      color: #2e7d32;
+    }
+
+    .result-box.moderate {
+      background: #fff3e0;
+      border-color: #ff9800;
+      color: #e65100;
+    }
+
+    .result-box.suspicious {
+      background: #ffebee;
+      border-color: #f44336;
+      color: #c62828;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #666;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2e7d32;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     /* Guide section */
@@ -171,7 +217,7 @@
   <div class="container">
     <div class="form-group">
       <label for="analysisType">Choose type:</label>
-      <select id="analysisType">
+      <select id="analysisType" onchange="updatePlaceholder()">
         <option value="url">URL</option>
         <option value="email">Email</option>
         <option value="message">Message</option>
@@ -180,14 +226,14 @@
 
     <div class="form-group">
       <label for="inputText">Enter text:</label>
-      <textarea id="inputText" placeholder="Paste here..."></textarea>
+      <textarea id="inputText" placeholder="Paste URL here..."></textarea>
     </div>
 
-    <button>Scan</button>
+    <button onclick="performScan()">Scan</button>
 
     <div class="form-group">
       <label>Result:</label>
-      <div id="resultBox" class="result-box">Waiting for ML check...</div>
+      <div id="resultBox" class="result-box">Waiting for analysis...</div>
     </div>
 
     <!-- Guide -->
@@ -215,5 +261,135 @@
     </div>
   </div>
 
+  <script>
+    // Update placeholder text based on selected type
+    function updatePlaceholder() {
+      const type = document.getElementById('analysisType').value;
+      const textarea = document.getElementById('inputText');
+      
+      switch(type) {
+        case 'url':
+          textarea.placeholder = 'Paste URL here...';
+          break;
+        case 'email':
+          textarea.placeholder = 'Paste email content here...';
+          break;
+        case 'message':
+          textarea.placeholder = 'Paste message text here...';
+          break;
+      }
+    }
+
+    async function performScan() {
+      const analysisType = document.getElementById('analysisType').value;
+      const inputText = document.getElementById('inputText').value.trim();
+      const resultBox = document.getElementById('resultBox');
+      const button = document.querySelector('button');
+
+      // Validation
+      if (!inputText) {
+        resultBox.innerHTML = '⚠️ Please enter text to analyze.';
+        resultBox.className = 'result-box moderate';
+        return;
+      }
+
+      // Show loading state
+      button.disabled = true;
+      button.innerHTML = 'Scanning...';
+      resultBox.innerHTML = '<div class="loading"><div class="spinner"></div>Analyzing with ML model...</div>';
+      resultBox.className = 'result-box';
+
+      try {
+        // Single API endpoint for all analysis types
+        // Update this URL to match your Flask API endpoint
+        const apiUrl = 'http://localhost:5000/predict'; // Adjust this to your actual Flask endpoint
+        
+        // Format the request data for all types
+        const requestData = {
+          type: analysisType,  // 'url', 'email', or 'message'
+          content: inputText   // the text content to analyze
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestData)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        // Process the result from your Flask API
+        // This will handle all three types: url, email, message
+        displayResult(result, analysisType);
+
+      } catch (error) {
+        console.error('Error:', error);
+        resultBox.innerHTML = `❌ Error connecting to analysis service: ${error.message}`;
+        resultBox.className = 'result-box moderate';
+      } finally {
+        // Reset button
+        button.disabled = false;
+        button.innerHTML = 'Scan';
+      }
+    }
+
+    function displayResult(result, type) {
+      const resultBox = document.getElementById('resultBox');
+      
+      // Adjust this based on your Flask API response format
+      // Common response formats might be:
+      // { "prediction": "safe/phishing", "confidence": 0.95 }
+      // or { "result": 0/1, "probability": 0.8 }
+      
+      let riskLevel, message;
+      let contentType = type.toUpperCase();
+      
+      if (result.prediction) {
+        // If your API returns prediction as text
+        if (result.prediction.toLowerCase() === 'safe' || result.prediction === 0) {
+          riskLevel = 'safe';
+          message = `✅ This ${contentType} appears to be SAFE (Confidence: ${(result.confidence * 100).toFixed(1)}%)`;
+        } else {
+          riskLevel = 'suspicious';
+          if (type === 'url') {
+            message = `🚨 This ${contentType} appears to be SUSPICIOUS! Avoid clicking (Risk: ${(result.confidence * 100).toFixed(1)}%)`;
+          } else if (type === 'email') {
+            message = `🚨 This ${contentType} appears to be PHISHING! Don't respond or click links (Risk: ${(result.confidence * 100).toFixed(1)}%)`;
+          } else {
+            message = `🚨 This ${contentType} appears to be SUSPICIOUS! Likely scam (Risk: ${(result.confidence * 100).toFixed(1)}%)`;
+          }
+        }
+      } else if (result.result !== undefined) {
+        // If your API returns result as number
+        if (result.result === 0) {
+          riskLevel = 'safe';
+          message = `✅ This ${contentType} appears to be SAFE (Confidence: ${((1 - result.probability) * 100).toFixed(1)}%)`;
+        } else {
+          riskLevel = 'suspicious';
+          if (type === 'url') {
+            message = `🚨 This ${contentType} appears to be SUSPICIOUS! Avoid clicking (Risk: ${(result.probability * 100).toFixed(1)}%)`;
+          } else if (type === 'email') {
+            message = `🚨 This ${contentType} appears to be PHISHING! Don't respond or click links (Risk: ${(result.probability * 100).toFixed(1)}%)`;
+          } else {
+            message = `🚨 This ${contentType} appears to be SUSPICIOUS! Likely scam (Risk: ${(result.probability * 100).toFixed(1)}%)`;
+          }
+        }
+      } else {
+        // Default case
+        riskLevel = 'moderate';
+        message = `⚠️ ${contentType} analysis completed but result format is unexpected.`;
+      }
+      
+      resultBox.innerHTML = message;
+      resultBox.className = `result-box ${riskLevel}`;
+    }
+
+  </script>
 </body>
 </html>
