@@ -4,7 +4,6 @@ const LocalStrategy = require("passport-local").Strategy;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const bcrypt = require("bcryptjs");
 const User = require("./models/Users"); 
-
 passport.use(
   new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
     try {

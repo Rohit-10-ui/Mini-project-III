@@ -13,17 +13,16 @@
       transition: background 0.3s, color 0.3s;
     }
 
-    /* Header Layout */
     header {
       background: #2e7d32;
       color: white;
       padding: 15px 20px;
       display: flex;
-      justify-content: space-between; /* left + right */
-      align-items: center;            /* vertical center */
+      justify-content: space-between; 
+      align-items: center;            
     }
 
-    /* Left side (logo + title) */
+
     .header-left {
       display: flex;
       align-items: center;
@@ -40,7 +39,7 @@
       letter-spacing: 1px;
     }
 
-    /* Right side actions */
+  
     .header-actions {
   display: flex;
   align-items: center;
@@ -48,7 +47,6 @@
 }
 
 
-    /* Dark mode button */
     .header-actions .toggle-btn {
       background: white;
       border: 2px solid #2e7d32;
@@ -65,7 +63,6 @@
       background: #e8f5e9;
     }
 
-    /* Auth Buttons */
     .auth-buttons {
       display: flex;
       flex-direction: column;
@@ -91,7 +88,6 @@
       color: #2e7d32;
     }
 
-    /* Hero */
     .hero {
       text-align: center;
       padding: 70px 20px;
@@ -159,7 +155,7 @@
       color: #2e7d32;
     }
 
-    /* Features */
+
     .features {
       padding: 50px 20px;
       background: #e8f5e9;
@@ -218,7 +214,6 @@
       transition: background 0.3s, color 0.3s;
     }
 
-    /* Footer */
     footer {
       text-align: center;
       padding: 15px;
@@ -227,7 +222,6 @@
       margin-top: 20px;
     }
 
-    /* Dark Mode */
     body.dark {
       background: #121212;
       color: #eee;
@@ -284,19 +278,18 @@
       background: #0d3c14;
     }
 
-    /* Auth Buttons Horizontal + Square */
 .auth-buttons {
   display: flex;
-  flex-direction: row; /* horizontal layout */
-  gap: 10px;           /* spacing between buttons */
+  flex-direction: row; 
+  gap: 10px;           
 }
 
 .auth-buttons a, .google-btn {
-  width: 120px;       /* fixed width */
-  height: 40px;       /* fixed height */
+  width: 120px;       
+  height: 40px;       
   text-align: center;
-  padding: 0;         /* remove vertical padding */
-  border-radius: 5px; /* squared corners */
+  padding: 0;         
+  border-radius: 5px; 
   display: flex;
   justify-content: center;
   align-items: center;
@@ -370,19 +363,15 @@
       const getProtectedBtn = document.getElementById("get-protected-btn");
 
       if (data.loggedIn) {
-        // Show user info, hide login/signup
         authButtons.style.display = "none";
         userInfo.style.display = "flex";
         username.textContent = "Hello, " + data.username;
 
-        // Hero button goes to phishing.html
         getProtectedBtn.href = "/phishing";
       } else {
-        // Not logged in: show login/signup buttons
         authButtons.style.display = "flex";
         userInfo.style.display = "none";
 
-        // Hero button goes to signup
         getProtectedBtn.href = "/signup";
       }
 
