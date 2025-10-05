@@ -120,11 +120,11 @@
       <input type="text" id="urlInput" placeholder="https://example.com" />
     </div>
     
-    <button id="scanBtn">🚀 Scan URL</button>
+    <button id="scanBtn">Scan URL</button>
     
     <div class="loading" id="loading">
       <div class="spinner"></div>
-      Analyzing URL with AI...
+      Analyzing URL ...
     </div>
     
     <div class="result" id="result">
@@ -181,7 +181,7 @@
       } catch (error) {
         document.getElementById('result').innerHTML = 
           `<div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px;">
-            ⚠️ Error: ${error.message}
+            Error: ${error.message}
           </div>`;
         document.getElementById('result').style.display = 'block';
       }

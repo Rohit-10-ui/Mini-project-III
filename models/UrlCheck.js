@@ -7,5 +7,4 @@ const UrlCheckSchema = new mongoose.Schema({
   checkedAt: { type: Date, default: Date.now },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
-
 module.exports = mongoose.models.UrlCheck || mongoose.model("UrlCheck", UrlCheckSchema);

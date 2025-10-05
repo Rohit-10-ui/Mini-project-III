@@ -13,7 +13,6 @@ const UrlCheck = require("./models/UrlCheck");
 const app = express();
 const PORT = 3019;
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
@@ -23,6 +22,9 @@ app.use(
     secret: process.env.SESSION_SECRET || "supersecret",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000  
+    }
   })
 );
 
@@ -30,9 +32,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 mongoose
-  .connect("mongodb://localhost:27017/mydb")
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
+  .connect("mongodb+srv://dharajsaibcs27_db_user:lAqm8tO8kLxj93GB@phishguard.6sms1pc.mongodb.net/?retryWrites=true&w=majority&appName=Phishguard/mydb")
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB error:", err));
 
 app.get("/", (req, res) => {
   if (req.isAuthenticated()) {
@@ -71,7 +73,6 @@ app.get("/dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "dashboard.html"));
 });
 
-
 app.post("/api/signup", async (req, res) => {
   const { email, password, name } = req.body;
   try {
@@ -87,7 +88,6 @@ app.post("/api/signup", async (req, res) => {
     res.status(500).json({ message: "Signup error", error: err.message });
   }
 });
-
 
 app.post("/api/login", passport.authenticate("local"), (req, res) => {
   res.status(200).json({
@@ -105,12 +105,15 @@ app.get(
 
 app.get("/api/current_user", (req, res) => {
   if (req.isAuthenticated()) {
-    res.json({ loggedIn: true, username: req.user.name || req.user.email.split("@")[0] });
+    res.json({ 
+      loggedIn: true, 
+      username: req.user.name || req.user.email.split("@")[0],
+      email: req.user.email
+    });
   } else {
     res.json({ loggedIn: false });
   }
 });
-
 
 app.post("/api/scan-url", async (req, res) => {
   try {
@@ -120,20 +123,20 @@ app.post("/api/scan-url", async (req, res) => {
       return res.status(400).json({ message: "URL is required" });
     }
 
-    console.log(`📊 Scanning URL: ${url}`);
+    console.log(`Scanning URL: ${url}`);
 
     const flaskResponse = await axios.post('http://localhost:5000/predict', {
       url: url,
       user: req.isAuthenticated() ? req.user._id.toString() : 'anonymous'
     }, {
-      timeout: 30000,
+      timeout: 0,
       headers: {
         'Content-Type': 'application/json'
       }
     });
 
     const result = flaskResponse.data;
-    console.log(`✅ Flask result: ${result.prediction} (${result.confidence}%)`);
+    console.log(`Flask result: ${result.prediction} (${result.confidence}%)`);
 
     if (req.isAuthenticated()) {
       try {
@@ -149,14 +152,12 @@ app.post("/api/scan-url", async (req, res) => {
         });
 
         await newCheck.save();
-        console.log(`💾 Saved to database`);
+        console.log(` Saved to database`);
       } catch (dbError) {
-        console.error(`❌ DB save error:`, dbError.message);
-        
+        console.error(`DB save error:`, dbError.message);
       }
     }
 
-  
     res.json({
       url: url,
       prediction: result.prediction,
@@ -168,19 +169,12 @@ app.post("/api/scan-url", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Scan error:", error.message);
+    console.error("Scan error:", error.message);
 
     if (error.code === 'ECONNREFUSED' || error.response?.status >= 500) {
       return res.status(503).json({
         message: "AI service is currently unavailable. Please try again later.",
         error: "SERVICE_UNAVAILABLE"
-      });
-    }
-
-    if (error.code === 'ECONNABORTED') {
-      return res.status(504).json({
-        message: "Scan timeout. The URL analysis is taking too long.",
-        error: "TIMEOUT"
       });
     }
 
@@ -197,10 +191,10 @@ app.get("/api/recent-scans", async (req, res) => {
       return res.json({ scans: [], message: "Login to see scan history", total: 0 });
     }
 
-    const recentScans = await UrlCheck.find({ userId: req.user._id })
-      .sort({ date: -1 })
-      .limit(10)
-      .select('text prediction confidence date type');
+    const recentScans = await UrlCheck.find({ user: req.user._id })  
+  .sort({ checkedAt: -1 })  
+  .limit(10)
+  .select('url prediction confidence checkedAt');
 
     const totalScans = await UrlCheck.countDocuments({ userId: req.user._id });
     const phishingCount = await UrlCheck.countDocuments({ 
@@ -216,7 +210,7 @@ app.get("/api/recent-scans", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error fetching scans:", error);
+    console.error("Error fetching scans:", error);
     res.status(500).json({ message: "Error fetching scan history" });
   }
 });
@@ -227,29 +221,23 @@ app.get("/api/all-scans", async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
+    console.log("Fetching scans for user:", req.user._id);
 
-    const allScans = await UrlCheck.find({ userId: req.user._id })
-      .sort({ date: -1 })
-      .skip(skip)
-      .limit(limit);
+    const allScans = await UrlCheck.find({ user: req.user._id })  
+      .sort({ checkedAt: -1 })  
+      .limit(20);
 
-    const total = await UrlCheck.countDocuments({ userId: req.user._id });
+    console.log("Found scans:", allScans.length);
 
     res.json({
       scans: allScans,
       pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        totalItems: total,
-        itemsPerPage: limit
+        totalItems: allScans.length
       }
     });
 
   } catch (error) {
-    console.error("❌ Error fetching all scans:", error);
+    console.error("Error fetching all scans:", error);
     res.status(500).json({ message: "Error fetching scan history" });
   }
 });
@@ -274,7 +262,7 @@ app.delete("/api/delete-scan/:scanId", async (req, res) => {
     res.json({ message: "Scan deleted successfully" });
 
   } catch (error) {
-    console.error("❌ Error deleting scan:", error);
+    console.error("Error deleting scan:", error);
     res.status(500).json({ message: "Error deleting scan" });
   }
 });
@@ -300,7 +288,7 @@ app.post("/api/save-check", async (req, res) => {
 
     res.status(201).json({ message: "Check saved", check: newCheck });
   } catch (err) {
-    console.error("❌ Error saving check:", err);
+    console.error("Error saving check:", err);
     res.status(500).json({ message: "Error saving check", error: err.message });
   }
 });
@@ -343,10 +331,10 @@ app.get("/logout", (req, res) => {
 });
 
 app.use((error, req, res, next) => {
-  console.error('❌ Unhandled error:', error);
+  console.error('Unhandled error:', error);
   res.status(500).json({
     message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong (check credentials)'
   });
 });
 
@@ -355,5 +343,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
