@@ -6,6 +6,11 @@ from features import extract_features
 from pymongo import MongoClient
 from datetime import datetime
 import os
+from dotenv import load_dotenv
+import warnings
+
+warnings.filterwarnings("ignore")
+load_dotenv()
 
 MODEL_PATH = os.getenv("MODEL_PATH", "models/phishing_model_optimized.pkl")
 
@@ -50,8 +55,10 @@ except Exception as e:
 app = Flask(__name__)
 CORS(app)
 
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
+
 try:
-    client = MongoClient("mongodb+srv://dharajsaibcs27_db_user:lAqm8tO8kLxj93GB@phishguard.6sms1pc.mongodb.net/?retryWrites=true&w=majority&appName=Phishguard/", serverSelectionTimeoutMS=2000)
+    client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
     client.server_info()
     db = client["mydb"]
     url_checks = db["urlchecks"]
@@ -238,8 +245,7 @@ def list_features():
     })
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", "5000"))
-    debug = os.getenv("DEBUG", "true").lower() == "true"
+    port = int(os.getenv("PORT", "10000"))
     
     print("\n" + "="*60)
     print("PHISHING DETECTION API")
@@ -251,4 +257,4 @@ if __name__ == "__main__":
     print(f"Database: {'✓ Connected' if mongodb_connected else '✗ Not connected'}")
     print("="*60 + "\n")
     
-    app.run(debug=debug, host="0.0.0.0", port=port)
+    app.run(debug=False, host="0.0.0.0", port=port)

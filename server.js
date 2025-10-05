@@ -1,4 +1,5 @@
 require("dotenv").config();
+const FLASK_URL = process.env.FLASK_URL || 'http://localhost:5000';
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -11,7 +12,7 @@ const User = require("./models/Users");
 const UrlCheck = require("./models/UrlCheck");
 
 const app = express();
-const PORT = 3019;
+const PORT = process.env.PORT || 3019;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -32,8 +33,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 mongoose
-  .connect("mongodb+srv://dharajsaibcs27_db_user:lAqm8tO8kLxj93GB@phishguard.6sms1pc.mongodb.net/?retryWrites=true&w=majority&appName=Phishguard/mydb")
-  .then(() => console.log("MongoDB connected"))
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log(" MongoDB connected"))
   .catch((err) => console.error("MongoDB error:", err));
 
 app.get("/", (req, res) => {
@@ -125,7 +126,7 @@ app.post("/api/scan-url", async (req, res) => {
 
     console.log(`Scanning URL: ${url}`);
 
-    const flaskResponse = await axios.post('http://localhost:5000/predict', {
+    const flaskResponse = await axios.post(`${FLASK_URL}/predict`, {
       url: url,
       user: req.isAuthenticated() ? req.user._id.toString() : 'anonymous'
     }, {
@@ -297,7 +298,7 @@ app.get("/api/health", async (req, res) => {
   try {
     let flaskStatus = 'offline';
     try {
-      const flaskResponse = await axios.get('http://localhost:5000/', { timeout: 5000 });
+      const flaskResponse = await axios.get(`${FLASK_URL}/`, { timeout: 5000 });
       flaskStatus = flaskResponse.status === 200 ? 'online' : 'offline';
     } catch (error) {
       flaskStatus = 'offline';
