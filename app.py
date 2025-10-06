@@ -253,7 +253,7 @@ def list_features():
 
 if __name__ == "__main__":
     # Render provides PORT environment variable
-    port = int(os.getenv("PORT", 10000))
+    port = int(os.getenv("PORT", 7000))
     
     print("\n" + "="*60)
     print("PHISHING DETECTION API")
