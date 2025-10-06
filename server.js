@@ -20,7 +20,7 @@ const UrlCheck = require("./models/UrlCheck");
 
 const app = express();
 // Render provides PORT environment variable
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -389,11 +389,11 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Page not found' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(port, '0.0.0.0', () => {
   console.log("\n" + "=".repeat(60));
   console.log("PHISHGUARD SERVER");
   console.log("=".repeat(60));
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${port}`);
   console.log(`MongoDB: ${mongoose.connection.readyState === 1 ? '✓ Connected' : '✗ Disconnected'}`);
   console.log(`Flask AI: ${FLASK_URL ? '✓ Configured' : '✗ Not configured'}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
