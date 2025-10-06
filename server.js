@@ -1,5 +1,12 @@
 require("dotenv").config();
-const FLASK_URL = process.env.FLASK_URL || 'http://localhost:5000';
+
+// Flask service URL - MUST be set as environment variable on Render
+const FLASK_URL = process.env.FLASK_URL || process.env.FLASK_SERVICE_URL;
+
+if (!FLASK_URL) {
+  console.error("⚠️ WARNING: FLASK_URL not set! AI features will not work.");
+  console.error("Set FLASK_URL to your Flask service URL on Render");
+}
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -12,7 +19,8 @@ const User = require("./models/Users");
 const UrlCheck = require("./models/UrlCheck");
 
 const app = express();
-const PORT = process.env.PORT || 3019;
+// Render provides PORT environment variable
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -20,11 +28,13 @@ app.use(express.static(__dirname));
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "supersecret",
+    secret: process.env.SESSION_SECRET || "supersecret-change-in-production",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000  
+      maxAge: 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      httpOnly: true
     }
   })
 );
@@ -32,10 +42,25 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// MongoDB connection - REQUIRED on Render
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error("❌ FATAL: MONGODB_URI not set!");
+  console.error("Please set MONGODB_URI environment variable on Render");
+  process.exit(1);
+}
+
 mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log(" MongoDB connected"))
-  .catch((err) => console.error("MongoDB error:", err));
+  .connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✓ MongoDB connected"))
+  .catch((err) => {
+    console.error("❌ MongoDB connection failed:", err.message);
+    process.exit(1);
+  });
 
 app.get("/", (req, res) => {
   if (req.isAuthenticated()) {
@@ -124,13 +149,21 @@ app.post("/api/scan-url", async (req, res) => {
       return res.status(400).json({ message: "URL is required" });
     }
 
+    if (!FLASK_URL) {
+      return res.status(503).json({
+        message: "AI service is not configured. Please contact administrator.",
+        error: "FLASK_SERVICE_NOT_CONFIGURED"
+      });
+    }
+
     console.log(`Scanning URL: ${url}`);
+    console.log(`Flask service: ${FLASK_URL}`);
 
     const flaskResponse = await axios.post(`${FLASK_URL}/predict`, {
       url: url,
       user: req.isAuthenticated() ? req.user._id.toString() : 'anonymous'
     }, {
-      timeout: 0,
+      timeout: 30000, // 30 second timeout
       headers: {
         'Content-Type': 'application/json'
       }
@@ -153,7 +186,7 @@ app.post("/api/scan-url", async (req, res) => {
         });
 
         await newCheck.save();
-        console.log(` Saved to database`);
+        console.log(`✓ Saved to database`);
       } catch (dbError) {
         console.error(`DB save error:`, dbError.message);
       }
@@ -172,10 +205,17 @@ app.post("/api/scan-url", async (req, res) => {
   } catch (error) {
     console.error("Scan error:", error.message);
 
-    if (error.code === 'ECONNREFUSED' || error.response?.status >= 500) {
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
       return res.status(503).json({
         message: "AI service is currently unavailable. Please try again later.",
         error: "SERVICE_UNAVAILABLE"
+      });
+    }
+
+    if (error.response?.status >= 500) {
+      return res.status(503).json({
+        message: "AI service encountered an error. Please try again.",
+        error: "SERVICE_ERROR"
       });
     }
 
@@ -193,9 +233,9 @@ app.get("/api/recent-scans", async (req, res) => {
     }
 
     const recentScans = await UrlCheck.find({ user: req.user._id })  
-  .sort({ checkedAt: -1 })  
-  .limit(10)
-  .select('url prediction confidence checkedAt');
+      .sort({ checkedAt: -1 })  
+      .limit(10)
+      .select('url prediction confidence checkedAt');
 
     const totalScans = await UrlCheck.countDocuments({ userId: req.user._id });
     const phishingCount = await UrlCheck.countDocuments({ 
@@ -297,11 +337,16 @@ app.post("/api/save-check", async (req, res) => {
 app.get("/api/health", async (req, res) => {
   try {
     let flaskStatus = 'offline';
-    try {
-      const flaskResponse = await axios.get(`${FLASK_URL}/`, { timeout: 5000 });
-      flaskStatus = flaskResponse.status === 200 ? 'online' : 'offline';
-    } catch (error) {
-      flaskStatus = 'offline';
+    let flaskError = null;
+    
+    if (FLASK_URL) {
+      try {
+        const flaskResponse = await axios.get(`${FLASK_URL}/health`, { timeout: 5000 });
+        flaskStatus = flaskResponse.status === 200 ? 'online' : 'offline';
+      } catch (error) {
+        flaskStatus = 'offline';
+        flaskError = error.message;
+      }
     }
 
     const mongoStatus = mongoose.connection.readyState === 1 ? 'online' : 'offline';
@@ -313,6 +358,7 @@ app.get("/api/health", async (req, res) => {
         mongodb: mongoStatus,
         flask_ai: flaskStatus
       },
+      flaskUrl: FLASK_URL || 'not configured',
       timestamp: new Date().toISOString()
     });
 
@@ -335,7 +381,7 @@ app.use((error, req, res, next) => {
   console.error('Unhandled error:', error);
   res.status(500).json({
     message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong (check credentials)'
+    error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
   });
 });
 
@@ -343,6 +389,13 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Page not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log("\n" + "=".repeat(60));
+  console.log("PHISHGUARD SERVER");
+  console.log("=".repeat(60));
+  console.log(`Server running on port ${PORT}`);
+  console.log(`MongoDB: ${mongoose.connection.readyState === 1 ? '✓ Connected' : '✗ Disconnected'}`);
+  console.log(`Flask AI: ${FLASK_URL ? '✓ Configured' : '✗ Not configured'}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log("=".repeat(60) + "\n");
 });

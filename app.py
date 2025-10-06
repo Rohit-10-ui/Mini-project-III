@@ -53,20 +53,27 @@ except Exception as e:
     raise RuntimeError(f"Could not load model: {e}")
 
 app = Flask(__name__)
-CORS(app)
 
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
+# CORS Configuration - Allow your Node.js service
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
 
-try:
-    client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
-    client.server_info()
-    db = client["mydb"]
-    url_checks = db["urlchecks"]
-    mongodb_connected = True
-    print("✓ MongoDB connected")
-except Exception as e:
-    print(f"⚠️  MongoDB not available: {e}")
-    mongodb_connected = False
+# MongoDB Connection with better error handling
+MONGODB_URI = os.getenv("MONGODB_URI")
+mongodb_connected = False
+
+if MONGODB_URI:
+    try:
+        client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+        client.server_info()
+        db = client["mydb"]
+        url_checks = db["urlchecks"]
+        mongodb_connected = True
+        print("✓ MongoDB connected")
+    except Exception as e:
+        print(f"⚠️ MongoDB not available: {e}")
+else:
+    print("⚠️ MONGODB_URI not set - database features disabled")
 
 @app.route("/", methods=["GET"])
 def home():
@@ -136,7 +143,7 @@ def predict():
         print("EXTRACTED FEATURES:")
         print(f"{'='*60}")
         for fname, fval in zip(FEATURE_NAMES, features_list):
-            indicator = "🚨 SUSPICIOUS" if fval == 1 else "✓ OK" if fval == -1 else "⚠️  NEUTRAL"
+            indicator = "🚨 SUSPICIOUS" if fval == 1 else "✓ OK" if fval == -1 else "⚠️ NEUTRAL"
             print(f"{fname:30s} = {fval:2d}  {indicator}")
         print(f"{'='*60}\n")
 
@@ -150,7 +157,7 @@ def predict():
         age_of_domain_idx = FEATURE_NAMES.index('age_of_domain') if 'age_of_domain' in FEATURE_NAMES else -1
         if age_of_domain_idx != -1 and features_list[age_of_domain_idx] == 1 and suspicious_count >= 4:
             prediction = 1
-            print("⚠️  OVERRIDE: Very young domain with multiple suspicious features")
+            print("⚠️ OVERRIDE: Very young domain with multiple suspicious features")
         
         # Override 2: 100% external resources with young domain
         request_url_idx = FEATURE_NAMES.index('Request_URL') if 'Request_URL' in FEATURE_NAMES else -1
@@ -159,7 +166,7 @@ def predict():
             url_anchor_idx != -1 and features_list[url_anchor_idx] == 1 and
             age_of_domain_idx != -1 and features_list[age_of_domain_idx] == 1):
             prediction = 1
-            print("⚠️  OVERRIDE: All external resources + suspicious anchors + young domain")
+            print("⚠️ OVERRIDE: All external resources + suspicious anchors + young domain")
         
         result = "phishing" if prediction == 1 else "legitimate"
 
@@ -245,7 +252,8 @@ def list_features():
     })
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", "10000"))
+    # Render provides PORT environment variable
+    port = int(os.getenv("PORT", 10000))
     
     print("\n" + "="*60)
     print("PHISHING DETECTION API")
@@ -255,7 +263,8 @@ if __name__ == "__main__":
     if MODEL_ACCURACY:
         print(f"Accuracy: {MODEL_ACCURACY:.2%}")
     print(f"Database: {'✓ Connected' if mongodb_connected else '✗ Not connected'}")
+    print(f"Port: {port}")
     print("="*60 + "\n")
     
+    # Use 0.0.0.0 to accept connections from Render
     app.run(debug=False, host="0.0.0.0", port=port)
-    
