@@ -205,28 +205,26 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
   const submitButton = this.querySelector('button[type="submit"]');
 
   if (password !== confirmPassword) {
-    alert("Passwords don’t match. Please try again.");
+    alert("Passwords don't match. Please try again.");
     return;
   }
 
   submitButton.style.display = 'none';
   loadingDiv.style.display = 'block';
 
-  fetch('http://localhost:3019/api/signup', {
+  // FIXED: Use relative URL instead of localhost
+  fetch('/api/signup', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password, name: email.split('@')[0] })
   })
   .then(res => res.json())
   .then(data => {
     if (data.message === "Signup success") {
-      const username = email.split('@')[0];
-      sessionStorage.setItem('isLoggedIn', 'true');
-      sessionStorage.setItem('username', username);
-      sessionStorage.setItem('userEmail', email);
-      window.location.href = 'homepage.html';
+      alert('Account created successfully! Redirecting to login...');
+      window.location.href = '/login';
     } else {
-      alert(data.message);
+      alert(data.message || 'Signup failed');
       submitButton.style.display = 'block';
       loadingDiv.style.display = 'none';
     }
