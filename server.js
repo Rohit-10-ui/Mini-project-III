@@ -66,24 +66,7 @@ mongoose
   });
 
 app.get("/", (req, res) => {
-  if (req.isAuthenticated()) {
-    res.send(`
-      <html>
-        <head><title>PHISHGUARD - Home</title></head>
-        <body style="font-family: Arial, sans-serif; text-align: center; margin-top: 50px;">
-          <h1>Welcome, ${req.user.name || req.user.email.split("@")[0]} 👋</h1>
-          <p>You are now inside PHISHGUARD.</p>
-          <div style="margin-top: 30px;">
-            <a href="/phishing" style="display:inline-block; margin:10px; padding:15px 30px; background:#2e7d32; color:white; text-decoration:none; border-radius:5px;">🛡️ Scan URLs</a>
-            <a href="/dashboard" style="display:inline-block; margin:10px; padding:15px 30px; background:#1976d2; color:white; text-decoration:none; border-radius:5px;">📊 Dashboard</a>
-            <a href="/logout" style="display:inline-block; margin:10px; padding:15px 30px; background:#c62828; color:white; text-decoration:none; border-radius:5px;">Logout</a>
-          </div>
-        </body>
-      </html>
-    `);
-  } else {
-    res.sendFile(path.join(__dirname, "homepage.html"));
-  }
+  res.sendFile(path.join(__dirname, "homepage.html"));
 });
 
 app.get("/homepage", (req, res) => res.sendFile(path.join(__dirname, "homepage.html")));
