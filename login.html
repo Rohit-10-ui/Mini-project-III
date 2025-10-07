@@ -141,7 +141,6 @@
       or <a href="/auth/google" class="google-btn">Login with Google</a>
     </div>
   </form>
-
 <script>
   document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -153,18 +152,17 @@
     submitButton.style.display = 'none';
     loadingDiv.style.display = 'block';
 
-    fetch('http://localhost:3019/api/login', {
+    // FIXED: Use relative URL instead of localhost
+    fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     })
     .then(res => res.json())
     .then(data => {
-      if (data.username) {
-        sessionStorage.setItem('isLoggedIn', 'true');
-        sessionStorage.setItem('username', data.username);
-        sessionStorage.setItem('userEmail', email);
-        window.location.href = 'homepage.html';
+      if (data.message === "Login success" || data.username) {
+        alert('Login successful! Welcome back!');
+        window.location.href = '/';
       } else {
         alert(data.message || "Login failed. Please try again.");
         submitButton.style.display = 'block';
@@ -172,10 +170,11 @@
       }
     })
     .catch(err => {
-      alert("Something went wrong: ");
+      alert("Something went wrong: " + err.message);
       submitButton.style.display = 'block';
       loadingDiv.style.display = 'none';
     });
   });
 </script>
+
 </body></html>
