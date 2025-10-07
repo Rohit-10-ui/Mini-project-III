@@ -153,7 +153,7 @@
     loadingDiv.style.display = 'block';
 
     // FIXED: Use relative URL instead of localhost
-    fetch('/login', {
+    fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
