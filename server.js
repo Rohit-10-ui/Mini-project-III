@@ -149,7 +149,7 @@ app.post("/api/scan-url", async (req, res) => {
       url: url,
       user: req.isAuthenticated() ? req.user._id.toString() : 'anonymous'
     }, {
-      timeout: 30000, // 30 second timeout
+      timeout: 120000,
       headers: {
         'Content-Type': 'application/json'
       }
