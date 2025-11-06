@@ -83,6 +83,99 @@
             background: #b71c1c;
         }
 
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stats-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stats-card h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .stat-phishing {
+            color: #c62828;
+        }
+
+        .stat-legitimate {
+            color: #2e7d32;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f5f5f5;
+            padding: 8px;
+            border-radius: 8px;
+            width: fit-content;
+        }
+
+        .type-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .type-btn.active {
+            background: #2e7d32;
+            color: white;
+        }
+
+        .type-btn:hover:not(.active) {
+            background: #e0e0e0;
+        }
+
         .history-section {
             background: white;
             padding: 30px;
@@ -195,8 +288,44 @@
             </div>
         </div>
 
+        <div class="stats-container">
+            <div class="stats-card">
+                <h3>📊 Statistics Overview</h3>
+                <div id="statsContent">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Scans:</span>
+                        <span class="stat-value" id="totalScans">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Phishing Detected:</span>
+                        <span class="stat-value stat-phishing" id="phishingCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Legitimate:</span>
+                        <span class="stat-value stat-legitimate" id="legitimateCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Phishing Rate:</span>
+                        <span class="stat-value" id="detectionRate">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card">
+                <h3>📈 Detection Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <div class="history-section">
             <h2>Your Scan History</h2>
+            <div class="type-selector">
+                <button class="type-btn active" data-type="all" onclick="filterByType('all')">All</button>
+                <button class="type-btn" data-type="url" onclick="filterByType('url')">URLs Only</button>
+                <button class="type-btn" data-type="message" onclick="filterByType('message')">Messages Only</button>
+            </div>
             <div id="historyContent">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -206,53 +335,24 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        let allScans = [];
+        let currentFilter = 'all';
+        let pieChartInstance = null;
+
         async function loadHistory() {
             try {
                 const res = await fetch('/api/all-scans');
                 const data = await res.json();
 
                 if (data.scans && data.scans.length > 0) {
-                    let tableHTML = `
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Type</th>
-                                    <th>URL / Input</th>
-                                    <th>Result</th>
-                                    <th>Confidence</th>
-                                    <th>Date & Time</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-                    data.scans.forEach((scan, index) => {
-                        const resultClass = scan.prediction === 'phishing' ? 'result-phishing' : 'result-legitimate';
-                        const resultText = scan.prediction === 'phishing' ? 'Phishing' : 'Legitimate';
-                        const date = new Date(scan.checkedAt).toLocaleString();
-                        const urlText = scan.url || scan.text || 'N/A';
-                        
-                        tableHTML += `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td><span class="type-badge">${(scan.type || 'URL').toUpperCase()}</span></td>
-                                <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${urlText}">${urlText}</td>
-                                <td class="${resultClass}">${resultText}</td>
-                                <td>${scan.confidence ? scan.confidence.toFixed(2) + '%' : 'N/A'}</td>
-                                <td>${date}</td>
-                            </tr>
-                        `;
-                    });
-
-                    tableHTML += `
-                            </tbody>
-                        </table>
-                    `;
-
-                    document.getElementById('historyContent').innerHTML = tableHTML;
+                    allScans = data.scans;
+                    updateStatistics(allScans);
+                    renderHistory(allScans);
                 } else {
+                    allScans = [];
+                    updateStatistics([]);
                     document.getElementById('historyContent').innerHTML = `
                         <div class="no-data">
                             <p>No scans yet. <a href="/phishing" style="color: #2e7d32; font-weight: 600;">Start scanning URLs</a></p>
@@ -268,6 +368,151 @@
                     </div>
                 `;
             }
+        }
+
+        function updateStatistics(scans) {
+            const total = scans.length;
+            const phishing = scans.filter(s => s.prediction === 'phishing').length;
+            const legitimate = scans.filter(s => s.prediction === 'legitimate').length;
+            const detectionRate = total > 0 ? ((phishing / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('totalScans').textContent = total;
+            document.getElementById('phishingCount').textContent = phishing;
+            document.getElementById('legitimateCount').textContent = legitimate;
+            document.getElementById('detectionRate').textContent = detectionRate + '%';
+
+            // Update pie chart
+            updatePieChart(phishing, legitimate);
+        }
+
+        function updatePieChart(phishing, legitimate) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            
+            if (pieChartInstance) {
+                pieChartInstance.destroy();
+            }
+
+            if (phishing === 0 && legitimate === 0) {
+                // Show "No data" message
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                ctx.fillText('No data available', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+
+            pieChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Phishing', 'Legitimate'],
+                    datasets: [{
+                        data: [phishing, legitimate],
+                        backgroundColor: ['#c62828', '#2e7d32'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterByType(type) {
+            currentFilter = type;
+            
+            // Update active button
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.type === type) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Filter scans
+            let filteredScans = allScans;
+            if (type === 'url') {
+                filteredScans = allScans.filter(s => (s.type || 'url') === 'url');
+            } else if (type === 'message') {
+                filteredScans = allScans.filter(s => s.type === 'message');
+            }
+
+            updateStatistics(filteredScans);
+            renderHistory(filteredScans);
+        }
+
+        function renderHistory(scans) {
+            if (scans.length === 0) {
+                document.getElementById('historyContent').innerHTML = `
+                    <div class="no-data">
+                        <p>No ${currentFilter === 'all' ? '' : currentFilter} scans found.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Type</th>
+                            <th>URL / Input</th>
+                            <th>Result</th>
+                            <th>Confidence</th>
+                            <th>Date & Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            scans.forEach((scan, index) => {
+                const resultClass = scan.prediction === 'phishing' ? 'result-phishing' : 'result-legitimate';
+                const resultText = scan.prediction === 'phishing' ? 'Phishing' : 'Legitimate';
+                const date = new Date(scan.checkedAt).toLocaleString();
+                const urlText = scan.url || scan.text || 'N/A';
+                
+                tableHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><span class="type-badge">${(scan.type || 'URL').toUpperCase()}</span></td>
+                        <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${urlText}">${urlText}</td>
+                        <td class="${resultClass}">${resultText}</td>
+                        <td>${scan.confidence ? scan.confidence.toFixed(2) + '%' : 'N/A'}</td>
+                        <td>${date}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('historyContent').innerHTML = tableHTML;
         }
 
         loadHistory();

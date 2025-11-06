@@ -1,11 +1,20 @@
 require("dotenv").config();
 
-// Flask service URL - MUST be set as environment variable on Render
+// Flask service URLs - RENDER DEPLOYMENT
 const FLASK_URL = process.env.FLASK_URL || process.env.FLASK_SERVICE_URL;
+const FLASK_TEXT_URL = process.env.FLASK_TEXT_URL || process.env.FLASK_TEXT_SERVICE_URL;
+
+// LOCALHOST CONFIGURATION (commented out for Render deployment)
+// const FLASK_URL = process.env.FLASK_URL || "http://localhost:7000";  // URL phishing detection
+// const FLASK_TEXT_URL = process.env.FLASK_TEXT_URL || "http://localhost:5002";  // Text/Email/SMS phishing detection
 
 if (!FLASK_URL) {
-  console.error("⚠️ WARNING: FLASK_URL not set! AI features will not work.");
+  console.error("⚠️ WARNING: FLASK_URL not set! URL scanning will not work.");
   console.error("Set FLASK_URL to your Flask service URL on Render");
+}
+
+if (!FLASK_TEXT_URL) {
+  console.error("⚠️ WARNING: FLASK_TEXT_URL not set! Message scanning will not work.");
 }
 
 const express = require("express");
@@ -19,12 +28,15 @@ const User = require("./models/Users");
 const UrlCheck = require("./models/UrlCheck");
 
 const app = express();
-// Render provides PORT environment variable
-const PORT = process.env.PORT || 3000;
+// Port configuration - Render provides PORT environment variable
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
+
+// RENDER DEPLOYMENT: Trust Render's proxy
+app.set('trust proxy', 1);
 
 app.use(
   session({
@@ -33,7 +45,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
-      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      secure: process.env.NODE_ENV === 'production', // RENDER DEPLOYMENT: HTTPS only in production
       httpOnly: true
     }
   })
@@ -42,12 +54,14 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// MongoDB connection - REQUIRED on Render
+// MongoDB connection - RENDER DEPLOYMENT
 const MONGODB_URI = process.env.MONGODB_URI;
 
+// LOCALHOST CONFIGURATION (commented out for Render deployment)
+// const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/phishguard";
+
 if (!MONGODB_URI) {
-  console.error("❌ FATAL: MONGODB_URI not set!");
-  console.error("Please set MONGODB_URI environment variable on Render");
+  console.error("❌ MONGODB_URI not set! Please set it in Render environment variables");
   process.exit(1);
 }
 
@@ -56,31 +70,14 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("✓ MongoDB connected"))
+  .then(() => console.log("✓ MongoDB connected successfully"))
   .catch((err) => {
     console.error("❌ MongoDB connection failed:", err.message);
-    process.exit(1);
+    process.exit(1); // RENDER DEPLOYMENT: Exit on connection failure
   });
 
 app.get("/", (req, res) => {
-  if (req.isAuthenticated()) {
-    res.send(`
-      <html>
-        <head><title>PHISHGUARD - Home</title></head>
-        <body style="font-family: Arial, sans-serif; text-align: center; margin-top: 50px;">
-          <h1>Welcome, ${req.user.name || req.user.email.split("@")[0]} 👋</h1>
-          <p>You are now inside PHISHGUARD.</p>
-          <div style="margin-top: 30px;">
-            <a href="/phishing" style="display:inline-block; margin:10px; padding:15px 30px; background:#2e7d32; color:white; text-decoration:none; border-radius:5px;">🛡️ Scan URLs</a>
-            <a href="/dashboard" style="display:inline-block; margin:10px; padding:15px 30px; background:#1976d2; color:white; text-decoration:none; border-radius:5px;">📊 Dashboard</a>
-            <a href="/logout" style="display:inline-block; margin:10px; padding:15px 30px; background:#c62828; color:white; text-decoration:none; border-radius:5px;">Logout</a>
-          </div>
-        </body>
-      </html>
-    `);
-  } else {
-    res.sendFile(path.join(__dirname, "homepage.html"));
-  }
+  res.sendFile(path.join(__dirname, "homepage.html"));
 });
 
 app.get("/homepage", (req, res) => res.sendFile(path.join(__dirname, "homepage.html")));
@@ -100,13 +97,20 @@ app.get("/dashboard", (req, res) => {
 });
 
 app.post("/api/signup", async (req, res) => {
-  const { email, password, name } = req.body;
+  const { email, password, name, username } = req.body;
   try {
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(409).json({ message: "Email already exists" });
+    // Check if email already exists
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) return res.status(409).json({ message: "Email already exists" });
+
+    // Check if username already exists
+    if (username) {
+      const existingUsername = await User.findOne({ name: username });
+      if (existingUsername) return res.status(409).json({ message: "Username already taken" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ email, password: hashedPassword, name });
+    const newUser = new User({ email, password: hashedPassword, name: username || name });
     await newUser.save();
 
     res.status(201).json({ message: "Signup success" });
@@ -163,7 +167,7 @@ app.post("/api/scan-url", async (req, res) => {
       url: url,
       user: req.isAuthenticated() ? req.user._id.toString() : 'anonymous'
     }, {
-      timeout: 30000, // 30 second timeout
+      timeout: 120000,
       headers: {
         'Content-Type': 'application/json'
       }
@@ -182,6 +186,8 @@ app.post("/api/scan-url", async (req, res) => {
           user: req.user._id,  
           prediction: result.prediction,
           confidence: result.confidence,
+          features: result.features || {},
+          signals: result.signals || [],
           date: new Date()
         });
 
@@ -196,6 +202,8 @@ app.post("/api/scan-url", async (req, res) => {
       url: url,
       prediction: result.prediction,
       confidence: result.confidence,
+      features: result.features || {},
+      signals: result.signals || [],
       timestamp: new Date().toISOString(),
       message: result.prediction === 'phishing' ? 
         'Potential phishing site detected!' : 
@@ -221,6 +229,98 @@ app.post("/api/scan-url", async (req, res) => {
 
     res.status(500).json({
       message: "Scan failed: " + error.message,
+      error: "SCAN_FAILED"
+    });
+  }
+});
+
+// Scan message/email/SMS for phishing
+app.post("/api/scan-message", async (req, res) => {
+  try {
+    const { message } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ message: "Message text is required" });
+    }
+
+    if (!FLASK_TEXT_URL) {
+      return res.status(503).json({
+        message: "Text scanning service is not configured. Please contact administrator.",
+        error: "TEXT_SERVICE_NOT_CONFIGURED"
+      });
+    }
+
+    console.log(`Scanning message: ${message.substring(0, 100)}...`);
+    console.log(`Flask text service: ${FLASK_TEXT_URL}`);
+
+    const flaskResponse = await axios.post(`${FLASK_TEXT_URL}/predict`, {
+      text: message,
+      type: 'message',
+      user: req.isAuthenticated() ? req.user._id.toString() : 'anonymous'
+    }, {
+      timeout: 30000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const result = flaskResponse.data;
+    console.log(`Flask result: ${result.prediction} (${result.confidence}%)`);
+
+    if (req.isAuthenticated()) {
+      try {
+        const newCheck = new UrlCheck({
+          userId: req.user._id,
+          type: 'message',
+          text: message,  
+          url: null,   
+          user: req.user._id,  
+          prediction: result.prediction,
+          confidence: result.confidence,
+          features: result.features || {},
+          signals: result.signals || [],
+          date: new Date()
+        });
+
+        await newCheck.save();
+        console.log(`✓ Saved message scan to database`);
+      } catch (dbError) {
+        console.error(`DB save error:`, dbError.message);
+      }
+    }
+
+    res.json({
+      text: message,
+      prediction: result.prediction,
+      confidence: result.confidence,
+      phishingProbability: result.phishingProbability,
+      signals: result.signals || [],
+      features: result.features || {},
+      timestamp: new Date().toISOString(),
+      message: result.prediction === 'phishing' ? 
+        'Potential phishing message detected!' : 
+        'Message appears to be legitimate.'
+    });
+
+  } catch (error) {
+    console.error("Message scan error:", error.message);
+
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      return res.status(503).json({
+        message: "Text scanning service is currently unavailable. Please try again later.",
+        error: "SERVICE_UNAVAILABLE"
+      });
+    }
+
+    if (error.response?.status >= 500) {
+      return res.status(503).json({
+        message: "Text scanning service encountered an error. Please try again.",
+        error: "SERVICE_ERROR"
+      });
+    }
+
+    res.status(500).json({
+      message: "Message scan failed: " + error.message,
       error: "SCAN_FAILED"
     });
   }
@@ -389,13 +489,14 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Page not found' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+// LOCALHOST: Listen on localhost only
+app.listen(port, () => {
+// app.listen(port, '0.0.0.0', () => { // RENDER DEPLOYMENT: Listen on all interfaces
   console.log("\n" + "=".repeat(60));
-  console.log("PHISHGUARD SERVER");
+  console.log("PHISHGUARD SERVER - LOCALHOST MODE");
   console.log("=".repeat(60));
-  console.log(`Server running on port ${PORT}`);
-  console.log(`MongoDB: ${mongoose.connection.readyState === 1 ? '✓ Connected' : '✗ Disconnected'}`);
-  console.log(`Flask AI: ${FLASK_URL ? '✓ Configured' : '✗ Not configured'}`);
+  console.log(`Server running on http://localhost:${port}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`MongoDB: Connecting to ${MONGODB_URI.includes('localhost') ? 'localhost' : 'cloud'}...`);
   console.log("=".repeat(60) + "\n");
 });

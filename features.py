@@ -490,21 +490,113 @@ def dnsRecord(url):
         logger.error(f"dnsRecord error: {e}")
         return -1
 
+# Feature 11: Prefix Suffix (hyphen in domain)
+def prefixSuffix(url):
+    """Check if domain contains '-' which is often used in phishing"""
+    try:
+        _, _, ext, _, reg_domain = _parsed(url)
+        if not reg_domain:
+            logger.info(f"Prefix_Suffix: 1 (no domain)")
+            return 1
+        
+        # Check if domain name contains hyphen
+        result = 1 if '-' in ext.domain else -1
+        logger.info(f"Prefix_Suffix: {result} (domain: {ext.domain})")
+        return result
+    except Exception as e:
+        logger.error(f"Prefix_Suffix error: {e}")
+        return 1
+
+# Feature 12: URL Length
+def urlLength(url):
+    """Phishing URLs tend to be longer to hide the real destination"""
+    try:
+        u = _normalize_url(url)
+        length = len(u)
+        
+        if length < 54:
+            result = -1  # Legitimate
+        elif length <= 75:
+            result = 0   # Suspicious
+        else:
+            result = 1   # Phishing
+        
+        logger.info(f"URL_Length: {result} (length: {length})")
+        return result
+    except Exception as e:
+        logger.error(f"URL_Length error: {e}")
+        return 1
+
+# Feature 13: HTTPS Token in Domain
+def httpsToken(url):
+    """Phishers often include 'https' in domain name to appear secure"""
+    try:
+        _, p, _, _, reg_domain = _parsed(url)
+        
+        # Check if 'https' or 'http' appears in the domain name (not the protocol)
+        host = p.hostname or ""
+        if 'https' in host.lower() or 'http' in host.lower():
+            logger.info(f"HTTPS_token: 1 (found in domain: {host})")
+            return 1
+        else:
+            logger.info(f"HTTPS_token: -1 (not in domain)")
+            return -1
+    except Exception as e:
+        logger.error(f"HTTPS_token error: {e}")
+        return 1
+
+# Feature 14: Redirect
+def redirect(url):
+    """Check number of redirects - phishing sites often redirect multiple times"""
+    try:
+        u = _normalize_url(url)
+        
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            response = requests.get(u, headers=headers, allow_redirects=True, 
+                                   timeout=5, verify=False)
+            
+            # Count redirects
+            redirect_count = len(response.history)
+            
+            if redirect_count == 0:
+                result = -1  # No redirects - legitimate
+            elif redirect_count <= 1:
+                result = 0   # 1 redirect - suspicious
+            else:
+                result = 1   # Multiple redirects - phishing
+            
+            logger.info(f"Redirect: {result} (redirects: {redirect_count})")
+            return result
+            
+        except Exception as e:
+            logger.warning(f"Redirect: 0 (check failed: {e})")
+            return 0
+    except Exception as e:
+        logger.error(f"Redirect error: {e}")
+        return 0
+
 def extract_features(url):
-    """Extract all 10 features with logging"""
+    """Extract all 14 features with logging"""
     logger.info(f"\n{'='*60}\nExtracting features for: {url}\n{'='*60}")
     
     features = []
-    features.append(havingIP(url))
-    features.append(havingSubDomain(url))
-    features.append(SSLfinalState(url))
-    features.append(domainRegistrationLength(url))
-    features.append(requestURL(url))
-    features.append(urlOfAnchor(url))
-    features.append(linksInTags(url))
-    features.append(sfh(url))
-    features.append(ageOfDomain(url))
-    features.append(dnsRecord(url))
+    features.append(havingIP(url))                    # 1
+    features.append(havingSubDomain(url))              # 2
+    features.append(SSLfinalState(url))                # 3
+    features.append(domainRegistrationLength(url))     # 4
+    features.append(requestURL(url))                   # 5
+    features.append(urlOfAnchor(url))                  # 6
+    features.append(linksInTags(url))                  # 7
+    features.append(sfh(url))                          # 8
+    features.append(ageOfDomain(url))                  # 9
+    features.append(dnsRecord(url))                    # 10
+    features.append(prefixSuffix(url))                 # 11 - NEW
+    features.append(urlLength(url))                    # 12 - NEW
+    features.append(httpsToken(url))                   # 13 - NEW
+    features.append(redirect(url))                     # 14 - NEW
     
-    logger.info(f"{'='*60}\nFeature extraction complete\n{'='*60}\n")
+    logger.info(f"{'='*60}\nFeature extraction complete: {len(features)} features\n{'='*60}\n")
     return features

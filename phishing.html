@@ -6,65 +6,174 @@
   <title>PhishGuard - URL Scanner</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 50px auto;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
       padding: 20px;
       background: #f5f5f5;
+      min-height: 100vh;
     }
     .container {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 1000px;
+      margin: 0 auto;
     }
+    .nav {
+      text-align: center;
+      margin-bottom: 25px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .nav a {
+      color: #2e7d32;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+    .nav a:hover {
+      color: #1b5e20;
+    }
+
+    .main-card {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
     h1 {
       color: #2e7d32;
       text-align: center;
+      margin-bottom: 10px;
+      font-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .info-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
       margin-bottom: 30px;
     }
+
+    .info-card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #2e7d32;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .info-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .info-card-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .info-card h3 {
+      color: #2e7d32;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .info-card p {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
     .form-group {
       margin-bottom: 20px;
     }
     label {
       display: block;
       margin-bottom: 8px;
-      font-weight: bold;
+      font-weight: 600;
       color: #333;
+    }
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      background: white;
+      cursor: pointer;
+      transition: border-color 0.3s;
+    }
+    select:focus {
+      border-color: #2e7d32;
+      outline: none;
     }
     input[type="text"] {
       width: 100%;
       padding: 12px;
       border: 2px solid #ddd;
-      border-radius: 5px;
+      border-radius: 8px;
       font-size: 16px;
+      transition: border-color 0.3s;
     }
     input[type="text"]:focus {
+      border-color: #2e7d32;
+      outline: none;
+    }
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      min-height: 150px;
+      resize: vertical;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: border-color 0.3s;
+    }
+    textarea:focus {
       border-color: #2e7d32;
       outline: none;
     }
     button {
       background: #2e7d32;
       color: white;
-      padding: 12px 30px;
+      padding: 14px 35px;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
       display: block;
       margin: 20px auto;
+      transition: background 0.3s, transform 0.2s;
     }
     button:hover {
       background: #1b5e20;
+      transform: translateY(-2px);
     }
     button:disabled {
       background: #ccc;
       cursor: not-allowed;
+      transform: none;
     }
     .result {
       margin-top: 30px;
       padding: 20px;
-      border-radius: 5px;
+      border-radius: 8px;
       display: none;
     }
     .result.safe {
@@ -77,6 +186,10 @@
       border: 2px solid #f44336;
       color: #c62828;
     }
+    .result h3 {
+      margin-top: 0;
+      font-size: 20px;
+    }
     .loading {
       text-align: center;
       padding: 20px;
@@ -86,8 +199,8 @@
       border: 3px solid #f3f3f3;
       border-top: 3px solid #2e7d32;
       border-radius: 50%;
-      width: 30px;
-      height: 30px;
+      width: 40px;
+      height: 40px;
       animation: spin 1s linear infinite;
       margin: 0 auto 10px;
     }
@@ -95,106 +208,358 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    .nav {
-      text-align: center;
-      margin-bottom: 20px;
+    .features-progress {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
     }
-    .nav a {
+    .features-progress h4 {
+      margin-top: 0;
       color: #2e7d32;
-      text-decoration: none;
-      margin: 0 15px;
+      font-size: 16px;
+    }
+    .feature-item {
+      padding: 8px 12px;
+      margin: 5px 0;
+      background: white;
+      border-left: 3px solid #ccc;
+      border-radius: 3px;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .feature-item.safe {
+      border-left-color: #4caf50;
+      background: #f1f8f4;
+    }
+    .feature-item.suspicious {
+      border-left-color: #ff9800;
+      background: #fff8e1;
+    }
+    .feature-item.danger {
+      border-left-color: #f44336;
+      background: #ffebee;
+    }
+    .feature-status {
       font-weight: bold;
+      font-size: 12px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="nav">
-      <a href="/homepage">← Home</a> | <a href="/dashboard">Dashboard</a> | <a href="/logout">Logout</a>
+      <a href="/">← Home</a> | <a href="/dashboard">Dashboard</a> | <a href="/logout">Logout</a>
     </div>
+
+    <div class="main-card">
+      <h1>🛡️ PhishGuard Scanner</h1>
+      <p class="subtitle">Advanced AI-powered phishing detection for URLs and messages</p>
+
+      <!-- Info Cards Section -->
+      <div class="info-cards">
+        <div class="info-card">
+          <div class="info-card-icon">🔍</div>
+          <h3>URL Analysis</h3>
+          <p>Scans 14 security features including SSL, domain age, DNS records, and suspicious patterns</p>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">💬</div>
+          <h3>Message Check</h3>
+          <p>Analyzes 15 text features for urgency, threats, suspicious keywords, and phishing patterns</p>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">🤖</div>
+          <h3>AI Detection</h3>
+          <p>94.48% accuracy for URLs, 93.72% for messages using Random Forest algorithm</p>
+        </div>
+      </div>
     
-    <h1>🛡️ PhishGuard URL Scanner</h1>
-    
-    <div class="form-group">
-      <label for="urlInput">Enter URL to scan:</label>
-      <input type="text" id="urlInput" placeholder="https://example.com" />
-    </div>
-    
-    <button id="scanBtn">Scan URL</button>
-    
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      Analyzing URL ...
-    </div>
-    
-    <div class="result" id="result">
-      <h3 id="resultTitle"></h3>
-      <p id="resultMessage"></p>
-      <p><strong>Confidence:</strong> <span id="confidence"></span></p>
-      <p><strong>Scanned:</strong> <span id="timestamp"></span></p>
+      <div class="form-group">
+        <label for="scanType">Select scan type:</label>
+        <select id="scanType">
+          <option value="url">URL Check</option>
+          <option value="message">Message Content Check</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="inputText">Enter content to scan:</label>
+        <div id="inputContainer">
+          <input type="text" id="inputText" placeholder="https://example.com" />
+        </div>
+      </div>
+      
+      <button id="scanBtn">Scan</button>
+      
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        Analyzing content ...
+      </div>
+      
+      <div class="features-progress" id="featuresProgress">
+        <h4>🔍 Feature Analysis</h4>
+        <div id="featuresList"></div>
+      </div>
+      
+      <div class="result" id="result">
+        <h3 id="resultTitle"></h3>
+        <p id="resultMessage"></p>
+        <p><strong>Confidence:</strong> <span id="confidence"></span></p>
+        <p><strong>Scanned:</strong> <span id="timestamp"></span></p>
+      </div>
     </div>
   </div>
 
   <script>
-    document.getElementById('scanBtn').onclick = async function() {
-      const url = document.getElementById('urlInput').value.trim();
+    // URL Features (14 features)
+    const URL_FEATURES = [
+      { name: 'IP Address Check', key: 'having_IP_Address', delay: 0 },
+      { name: 'Subdomain Analysis', key: 'having_Sub_Domain', delay: 300 },
+      { name: 'SSL Certificate', key: 'SSLfinal_State', delay: 700 },
+      { name: 'Domain Registration', key: 'Domain_registeration_length', delay: 1700 },
+      { name: 'External Resources', key: 'Request_URL', delay: 3600 },
+      { name: 'Anchor Links', key: 'URL_of_Anchor', delay: 5100 },
+      { name: 'Tag Links', key: 'Links_in_tags', delay: 6600 },
+      { name: 'Form Handler', key: 'SFH', delay: 7400 },
+      { name: 'Domain Age', key: 'age_of_domain', delay: 8000 },
+      { name: 'DNS Record', key: 'DNSRecord', delay: 10000 },
+      { name: 'Domain Format', key: 'Prefix_Suffix', delay: 10500 },
+      { name: 'URL Length', key: 'URL_Length', delay: 10600 },
+      { name: 'HTTPS in Domain', key: 'HTTPS_token', delay: 10700 },
+      { name: 'Redirects', key: 'Redirect', delay: 10800 }
+    ];
+
+    // Message/Email/SMS Features (15 features)
+    const MESSAGE_FEATURES = [
+      { name: 'Number of URLs', key: 'num_urls', delay: 0 },
+      { name: 'URL with IP', key: 'url_with_ip', delay: 200 },
+      { name: 'Shortened URL', key: 'has_shortened_url', delay: 400 },
+      { name: 'Urgency Language', key: 'urgency_score', delay: 600 },
+      { name: 'Financial Keywords', key: 'financial_score', delay: 1000 },
+      { name: 'Suspicious Words', key: 'suspicious_score', delay: 1400 },
+      { name: 'Threat Language', key: 'threat_score', delay: 1800 },
+      { name: 'Excessive Punctuation', key: 'excessive_punctuation', delay: 2200 },
+      { name: 'Capitalization Ratio', key: 'all_caps_ratio', delay: 2600 },
+      { name: 'Spelling Quality', key: 'spelling_quality', delay: 3000 },
+      { name: 'Sender Mismatch', key: 'sender_mismatch', delay: 3400 },
+      { name: 'Phone Number', key: 'has_phone_number', delay: 3800 },
+      { name: 'Personal Info Request', key: 'requests_personal_info', delay: 4200 },
+      { name: 'Message Length', key: 'message_length', delay: 4600 },
+      { name: 'Suspicious Domain', key: 'suspicious_domain', delay: 5000 }
+    ];
+
+    let scanResults = null;
+    let currentScanType = 'url';
+
+    // Update input field and placeholder based on scan type
+    document.getElementById('scanType').addEventListener('change', function() {
+      const container = document.getElementById('inputContainer');
+      const scanType = this.value;
       
-      if (!url) {
-        alert('Please enter a URL');
+      if (scanType === 'url') {
+        // Use small input for URL
+        container.innerHTML = '<input type="text" id="inputText" placeholder="https://example.com" />';
+      } else {
+        // Use larger textarea for message
+        container.innerHTML = '<textarea id="inputText" placeholder="Enter email or message content to check for phishing..." rows="6"></textarea>';
+      }
+    });
+
+    document.getElementById('scanBtn').onclick = async function() {
+      const scanType = document.getElementById('scanType').value;
+      const inputText = document.getElementById('inputText').value.trim();
+      
+      // Store current scan type
+      currentScanType = scanType;
+      
+      if (!inputText) {
+        alert('Please enter content to scan');
         return;
       }
       
+      // Reset UI
       document.getElementById('loading').style.display = 'block';
       document.getElementById('result').style.display = 'none';
+      document.getElementById('featuresProgress').style.display = 'block';
+      document.getElementById('featuresList').innerHTML = '';
       document.getElementById('scanBtn').disabled = true;
+      scanResults = null;
+      
+      // Start feature animation
+      startFeatureAnalysis();
       
       try {
-        const response = await fetch('/api/scan-url', {
+        const endpoint = scanType === 'url' ? '/api/scan-url' : '/api/scan-message';
+        const payload = scanType === 'url' ? { url: inputText } : { message: inputText };
+        
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: url })
+          body: JSON.stringify(payload)
         });
         
         const data = await response.json();
         
         if (response.ok) {
-          const resultDiv = document.getElementById('result');
-          const isPhishing = data.prediction === 'phishing';
-          
-          resultDiv.className = 'result ' + (isPhishing ? 'phishing' : 'safe');
-          
-          document.getElementById('resultTitle').textContent = 
-            isPhishing ? 'PHISHING DETECTED' : 'URL IS SAFE';
-          
-          document.getElementById('resultMessage').textContent = 
-            isPhishing ? 'This URL appears to be malicious. Do not visit or enter personal information.' 
-                      : 'This URL appears to be legitimate and safe to visit.';
-          
-          document.getElementById('confidence').textContent = data.confidence + '%';
-          document.getElementById('timestamp').textContent = new Date().toLocaleString();
-          
-          resultDiv.style.display = 'block';
+          scanResults = data;
+          // Results will be shown after all features are "analyzed"
         } else {
           throw new Error(data.message || 'Scan failed');
         }
         
       } catch (error) {
+        document.getElementById('featuresProgress').style.display = 'none';
+        document.getElementById('loading').style.display = 'none';
         document.getElementById('result').innerHTML = 
           `<div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px;">
             Error: ${error.message}
           </div>`;
         document.getElementById('result').style.display = 'block';
+        document.getElementById('scanBtn').disabled = false;
       }
-      
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('scanBtn').disabled = false;
     };
     
-    document.getElementById('urlInput').onkeypress = function(e) {
-      if (e.key === 'Enter') {
+    function startFeatureAnalysis() {
+      const featuresList = document.getElementById('featuresList');
+      
+      // Use the correct feature list based on scan type
+      const FEATURES = currentScanType === 'url' ? URL_FEATURES : MESSAGE_FEATURES;
+      
+      FEATURES.forEach((feature, index) => {
+        setTimeout(() => {
+          // Add feature with "Analyzing..." status
+          const div = document.createElement('div');
+          div.className = 'feature-item';
+          div.id = `feature-${index}`;
+          div.innerHTML = `
+            <span>${feature.name}</span>
+            <span class="feature-status" style="color: #ff9800;">⏳ Analyzing...</span>
+          `;
+          div.style.opacity = '0';
+          div.style.transition = 'opacity 0.3s ease';
+          featuresList.appendChild(div);
+          
+          setTimeout(() => { div.style.opacity = '1'; }, 50);
+          
+          // Mark as analyzed after 500ms
+          setTimeout(() => {
+            if (scanResults === null) {
+              const statusSpan = div.querySelector('.feature-status');
+              if (statusSpan) {
+                statusSpan.textContent = '✓ Analyzed';
+                statusSpan.style.color = '#2196F3';
+              }
+            }
+            
+            // If this is the last feature, check if we have results
+            if (index === FEATURES.length - 1) {
+              setTimeout(checkAndShowResults, 500);
+            }
+          }, 500);
+          
+        }, feature.delay);
+      });
+    }
+    
+    function checkAndShowResults() {
+      if (scanResults) {
+        showFinalResults();
+      } else {
+        // Wait a bit more and check again
+        setTimeout(checkAndShowResults, 500);
+      }
+    }
+    
+    function showFinalResults() {
+      if (!scanResults) return;
+      
+      const features = scanResults.features || {};
+      const signals = scanResults.signals || [];
+      
+      // Use the correct feature list based on scan type
+      const FEATURES = currentScanType === 'url' ? URL_FEATURES : MESSAGE_FEATURES;
+      
+      // Update each feature with final result
+      FEATURES.forEach((feature, index) => {
+        setTimeout(() => {
+          const div = document.getElementById(`feature-${index}`);
+          if (!div) return;
+          
+          const value = features[feature.key];
+          let statusText = '';
+          let statusClass = '';
+          let statusColor = '';
+          
+          if (value === -1) {
+            statusText = '✓ SAFE';
+            statusClass = 'safe';
+            statusColor = '#4caf50';
+          } else if (value === 0) {
+            statusText = '⚠️ NEUTRAL';
+            statusClass = 'suspicious';
+            statusColor = '#ff9800';
+          } else if (value === 1) {
+            statusText = '🚨 SUSPICIOUS';
+            statusClass = 'danger';
+            statusColor = '#f44336';
+          }
+          
+          const isSuspicious = signals.includes(feature.key);
+          
+          div.className = 'feature-item ' + statusClass;
+          div.innerHTML = `
+            <span>${feature.name}${isSuspicious ? ' ⚡' : ''}</span>
+            <span class="feature-status" style="color: ${statusColor};">${statusText}</span>
+          `;
+          div.style.animation = 'pulse 0.4s ease';
+          
+          // Show final result after last feature updates
+          if (index === FEATURES.length - 1) {
+            setTimeout(displayFinalResult, 300);
+          }
+        }, index * 80);
+      });
+    }
+    
+    function displayFinalResult() {
+      if (!scanResults) return;
+      
+      const resultDiv = document.getElementById('result');
+      const isPhishing = scanResults.prediction === 'phishing';
+      
+      resultDiv.className = 'result ' + (isPhishing ? 'phishing' : 'safe');
+      
+      const contentType = currentScanType === 'url' ? 'URL' : 'MESSAGE';
+      const contentTypeLower = currentScanType === 'url' ? 'url' : 'message';
+      
+      document.getElementById('resultTitle').textContent = 
+        isPhishing ? '⚠️ PHISHING DETECTED' : `✅ ${contentType} IS SAFE`;
+      
+      document.getElementById('resultMessage').textContent = 
+        isPhishing ? `This ${contentTypeLower} appears to be malicious. Do not visit or enter personal information.` 
+                  : `This ${contentTypeLower} appears to be legitimate and safe.`;
+      
+      document.getElementById('confidence').textContent = scanResults.confidence + '%';
+      document.getElementById('timestamp').textContent = new Date().toLocaleString();
+      
+      resultDiv.style.display = 'block';
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('scanBtn').disabled = false;
+    }
+    
+    // Handle Enter key - only for URL input (single line), not for message textarea
+    document.addEventListener('keypress', function(e) {
+      const inputText = document.getElementById('inputText');
+      if (e.key === 'Enter' && inputText && inputText.tagName === 'INPUT') {
+        e.preventDefault();
         document.getElementById('scanBtn').click();
       }
-    };
+    });
   </script>
 </body>
 </html>

@@ -25,6 +25,10 @@ DISCRIMINATIVE_FEATURES = [
     "SFH",
     "age_of_domain",
     "DNSRecord",
+    "Prefix_Suffix",      # NEW - Feature 11
+    "URL_Length",         # NEW - Feature 12
+    "HTTPS_token",        # NEW - Feature 13
+    "Redirect",           # NEW - Feature 14
 ]
 
 model = None
@@ -54,12 +58,14 @@ except Exception as e:
 
 app = Flask(__name__)
 
-# CORS Configuration - Allow your Node.js service
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+# CORS Configuration - LOCALHOST: Allow all origins for development
+ALLOWED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+# ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",") # RENDER DEPLOYMENT
 CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
 
-# MongoDB Connection with better error handling
-MONGODB_URI = os.getenv("MONGODB_URI")
+# MongoDB Connection - LOCALHOST CONFIGURATION
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/phishguard")
+# MONGODB_URI = os.getenv("MONGODB_URI") # RENDER DEPLOYMENT
 mongodb_connected = False
 
 if MONGODB_URI:
@@ -69,9 +75,10 @@ if MONGODB_URI:
         db = client["mydb"]
         url_checks = db["urlchecks"]
         mongodb_connected = True
-        print("✓ MongoDB connected")
+        print("✓ MongoDB connected to:", "localhost" if "localhost" in MONGODB_URI else "cloud")
     except Exception as e:
         print(f"⚠️ MongoDB not available: {e}")
+        print("⚠️ Continuing without database - predictions will still work")
 else:
     print("⚠️ MONGODB_URI not set - database features disabled")
 
@@ -153,20 +160,21 @@ def predict():
         # Rule-based override for obvious phishing patterns
         suspicious_count = sum(1 for f in features_list if f == 1)
         
-        # Override 1: Very young domain (< 7 days) with multiple red flags
-        age_of_domain_idx = FEATURE_NAMES.index('age_of_domain') if 'age_of_domain' in FEATURE_NAMES else -1
-        if age_of_domain_idx != -1 and features_list[age_of_domain_idx] == 1 and suspicious_count >= 4:
-            prediction = 1
-            print("⚠️ OVERRIDE: Very young domain with multiple suspicious features")
+        # Only override if model predicts phishing AND we have strong indicators
+        # Don't override legitimate predictions to avoid false positives
         
-        # Override 2: 100% external resources with young domain
-        request_url_idx = FEATURE_NAMES.index('Request_URL') if 'Request_URL' in FEATURE_NAMES else -1
-        url_anchor_idx = FEATURE_NAMES.index('URL_of_Anchor') if 'URL_of_Anchor' in FEATURE_NAMES else -1
-        if (request_url_idx != -1 and features_list[request_url_idx] == 1 and
-            url_anchor_idx != -1 and features_list[url_anchor_idx] == 1 and
-            age_of_domain_idx != -1 and features_list[age_of_domain_idx] == 1):
+        # Override 1: Very suspicious - IP address + young domain + many red flags
+        has_ip_idx = FEATURE_NAMES.index('having_IP_Address') if 'having_IP_Address' in FEATURE_NAMES else -1
+        age_of_domain_idx = FEATURE_NAMES.index('age_of_domain') if 'age_of_domain' in FEATURE_NAMES else -1
+        
+        if (has_ip_idx != -1 and features_list[has_ip_idx] == 1 and  # Has IP address
+            suspicious_count >= 5):  # And many suspicious features
             prediction = 1
-            print("⚠️ OVERRIDE: All external resources + suspicious anchors + young domain")
+            print("⚠️ OVERRIDE: IP address with multiple suspicious features")
+        
+        # Override 2: ONLY if already predicted phishing by model
+        elif prediction == 1 and suspicious_count >= 6:
+            print("✓ Model prediction confirmed: High suspicious feature count")
         
         result = "phishing" if prediction == 1 else "legitimate"
 
@@ -252,19 +260,21 @@ def list_features():
     })
 
 if __name__ == "__main__":
-    # Render provides PORT environment variable
-    port = int(os.getenv("PORT", 10000))
+    # LOCALHOST: Default port 7000
+    port = int(os.getenv("PORT", 7000))
+    # port = int(os.getenv("PORT", 7000)) # RENDER DEPLOYMENT: Render provides PORT environment variable
     
     print("\n" + "="*60)
-    print("PHISHING DETECTION API")
+    print("PHISHING DETECTION API - LOCALHOST MODE")
     print("="*60)
     print(f"Model: {MODEL_TYPE}")
     print(f"Features: {len(FEATURE_NAMES)}")
     if MODEL_ACCURACY:
         print(f"Accuracy: {MODEL_ACCURACY:.2%}")
     print(f"Database: {'✓ Connected' if mongodb_connected else '✗ Not connected'}")
-    print(f"Port: {port}")
+    print(f"Running on: http://localhost:{port}")
     print("="*60 + "\n")
     
-    # Use 0.0.0.0 to accept connections from Render
-    app.run(debug=False, host="0.0.0.0", port=port)
+    # LOCALHOST: Listen on localhost only for security
+    app.run(debug=True, host="127.0.0.1", port=port)
+    # app.run(debug=False, host="0.0.0.0", port=port) # RENDER DEPLOYMENT: Accept connections from anywhere

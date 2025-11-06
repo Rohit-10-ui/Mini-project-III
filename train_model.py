@@ -19,6 +19,10 @@ discriminative_features = [
     "SFH",
     "age_of_domain",
     "DNSRecord",
+    "Prefix_Suffix",     
+    "URL_Length",         
+    "HTTPS_token",        
+    "Redirect",           
 ]
 
 X = data[discriminative_features].apply(pd.to_numeric, errors="coerce").fillna(0)

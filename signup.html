@@ -55,6 +55,15 @@
       font-size: 1rem;
       box-sizing: border-box;
     }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
     input:focus {
       outline: none;
       border-color: #4c6ef5;
@@ -141,6 +150,9 @@
     <h2>Create your account</h2>
     <p class="subtitle">It only takes a minute to get started</p>
 
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" required="" placeholder="Choose a username" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+" title="Username should be 3-20 characters long and contain only letters, numbers, and underscores">
+
     <label for="email">Email address</label>
     <input type="email" id="email" name="email" required="" placeholder="you@example.com">
 
@@ -198,6 +210,7 @@ document.getElementById('password').addEventListener('input', function() {
 document.getElementById('signupForm').addEventListener('submit', function(e) {
   e.preventDefault();
 
+  const username = document.getElementById('username').value;
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   const confirmPassword = document.getElementById('confirm-password').value;
@@ -205,28 +218,26 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
   const submitButton = this.querySelector('button[type="submit"]');
 
   if (password !== confirmPassword) {
-    alert("Passwords don’t match. Please try again.");
+    alert("Passwords don't match. Please try again.");
     return;
   }
 
   submitButton.style.display = 'none';
   loadingDiv.style.display = 'block';
 
-  fetch('http://localhost:3019/api/signup', {
+  // FIXED: Use relative URL instead of localhost
+  fetch('/api/signup', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ username, email, password, name: username })
   })
   .then(res => res.json())
   .then(data => {
     if (data.message === "Signup success") {
-      const username = email.split('@')[0];
-      sessionStorage.setItem('isLoggedIn', 'true');
-      sessionStorage.setItem('username', username);
-      sessionStorage.setItem('userEmail', email);
-      window.location.href = 'homepage.html';
+      alert('Account created successfully! Redirecting to login...');
+      window.location.href = '/login';
     } else {
-      alert(data.message);
+      alert(data.message || 'Signup failed');
       submitButton.style.display = 'block';
       loadingDiv.style.display = 'none';
     }

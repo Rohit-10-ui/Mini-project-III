@@ -88,6 +88,44 @@
       color: #2e7d32;
     }
 
+    /* Logout link styling */
+    #user-info a {
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      padding: 6px 16px;
+      border: 2px solid white;
+      border-radius: 20px;
+      transition: all 0.3s;
+      font-weight: 500;
+      background: transparent;
+    }
+
+    #user-info a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      text-decoration: none;
+      border-color: white;
+    }
+
+    #user-info a:visited {
+      color: white;
+    }
+
+    body.dark #user-info a {
+      color: white;
+      border-color: white;
+    }
+
+    body.dark #user-info a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    body.dark #user-info a:visited {
+      color: white;
+    }
+
     .hero {
       text-align: center;
       padding: 70px 20px;
@@ -302,7 +340,7 @@
 <body>
   <header>
     <div class="header-left">
-      <span class="logo">PH</span>
+      <span class="logo">🛡️</span>
       <h1>PHISHGUARD</h1>
     </div>
 
