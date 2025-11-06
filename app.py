@@ -58,14 +58,14 @@ except Exception as e:
 
 app = Flask(__name__)
 
-# CORS Configuration - LOCALHOST: Allow all origins for development
-ALLOWED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
-# ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",") # RENDER DEPLOYMENT
+# CORS Configuration - RENDER DEPLOYMENT
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+# ALLOWED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"] # LOCALHOST (commented out)
 CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
 
-# MongoDB Connection - LOCALHOST CONFIGURATION
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/phishguard")
-# MONGODB_URI = os.getenv("MONGODB_URI") # RENDER DEPLOYMENT
+# MongoDB Connection - RENDER DEPLOYMENT
+MONGODB_URI = os.getenv("MONGODB_URI")
+# MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/phishguard") # LOCALHOST (commented out)
 mongodb_connected = False
 
 if MONGODB_URI:
@@ -75,7 +75,7 @@ if MONGODB_URI:
         db = client["mydb"]
         url_checks = db["urlchecks"]
         mongodb_connected = True
-        print("✓ MongoDB connected to:", "localhost" if "localhost" in MONGODB_URI else "cloud")
+        print("✓ MongoDB connected successfully")
     except Exception as e:
         print(f"⚠️ MongoDB not available: {e}")
         print("⚠️ Continuing without database - predictions will still work")
@@ -260,21 +260,21 @@ def list_features():
     })
 
 if __name__ == "__main__":
-    # LOCALHOST: Default port 7000
+    # RENDER DEPLOYMENT: Render provides PORT environment variable
     port = int(os.getenv("PORT", 7000))
-    # port = int(os.getenv("PORT", 7000)) # RENDER DEPLOYMENT: Render provides PORT environment variable
+    # port = int(os.getenv("PORT", 7000)) # LOCALHOST (commented out)
     
     print("\n" + "="*60)
-    print("PHISHING DETECTION API - LOCALHOST MODE")
+    print("PHISHING DETECTION API - PRODUCTION MODE")
     print("="*60)
     print(f"Model: {MODEL_TYPE}")
     print(f"Features: {len(FEATURE_NAMES)}")
     if MODEL_ACCURACY:
         print(f"Accuracy: {MODEL_ACCURACY:.2%}")
     print(f"Database: {'✓ Connected' if mongodb_connected else '✗ Not connected'}")
-    print(f"Running on: http://localhost:{port}")
+    print(f"Port: {port}")
     print("="*60 + "\n")
     
-    # LOCALHOST: Listen on localhost only for security
-    app.run(debug=True, host="127.0.0.1", port=port)
-    # app.run(debug=False, host="0.0.0.0", port=port) # RENDER DEPLOYMENT: Accept connections from anywhere
+    # RENDER DEPLOYMENT: Accept connections from anywhere
+    app.run(debug=False, host="0.0.0.0", port=port)
+    # app.run(debug=True, host="127.0.0.1", port=port) # LOCALHOST (commented out)

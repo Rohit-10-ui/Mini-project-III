@@ -7,7 +7,11 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-CORS(app)
+
+# CORS Configuration - RENDER DEPLOYMENT
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+# ALLOWED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"] # LOCALHOST (commented out)
+CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
 
 # Load the trained model
 MODEL_PATH = "models/phishing_text_model.pkl"
@@ -162,11 +166,13 @@ def list_features():
     })
 
 if __name__ == "__main__":
+    # RENDER DEPLOYMENT: Render provides PORT environment variable
     port = int(os.getenv("PORT", "5002"))
-    debug = os.getenv("DEBUG", "true").lower() == "true"
+    debug = False  # Production mode
+    # debug = os.getenv("DEBUG", "true").lower() == "true" # LOCALHOST (commented out)
     
     print("\n" + "="*60)
-    print("EMAIL/SMS PHISHING DETECTION API")
+    print("EMAIL/SMS PHISHING DETECTION API - PRODUCTION MODE")
     print("="*60)
     print(f"Model: {model_type}")
     print(f"Features: {len(feature_names)}")
@@ -174,4 +180,5 @@ if __name__ == "__main__":
     print(f"Port: {port}")
     print("="*60 + "\n")
     
+    # RENDER DEPLOYMENT: Accept connections from anywhere
     app.run(debug=debug, host="0.0.0.0", port=port)
