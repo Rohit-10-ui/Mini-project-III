@@ -489,9 +489,9 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Page not found' });
 });
 
-// LOCALHOST: Listen on localhost only
-app.listen(port, () => {
-// app.listen(port, '0.0.0.0', () => { // RENDER DEPLOYMENT: Listen on all interfaces
+// RENDER DEPLOYMENT: Listen on all interfaces
+app.listen(port, '0.0.0.0', () => {
+// app.listen(port, () => { // LOCALHOST only
   console.log("\n" + "=".repeat(60));
   console.log("PHISHGUARD SERVER - LOCALHOST MODE");
   console.log("=".repeat(60));
