@@ -71,7 +71,7 @@ This guide explains how to deploy the PhishGuard application to Render.com with 
 
 ```
 NODE_ENV=production
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/phishguard?retryWrites=true&w=majority
+MONGODB_URI=<YOUR URI>
 SESSION_SECRET=generate-a-random-32-char-string-here
 GOOGLE_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
