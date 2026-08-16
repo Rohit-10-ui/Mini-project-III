@@ -1,0 +1,57 @@
+# Render manifest to deploy three services from this repository:
+# - phishguard-node: Node/Express web app (UI + API)
+# - phishguard-flask: URL phishing model (Flask)
+# - phishguard-text: Email/SMS text model (Flask)
+
+services:
+  - type: web_service
+    name: phishguard-node
+    env: node
+    region: oregon
+    branch: main
+    buildCommand: npm install
+    startCommand: npm run start
+    plan: free
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: FLASK_URL
+        sync: false
+      - key: FLASK_TEXT_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
+
+  - type: web_service
+    name: phishguard-flask
+    env: python
+    region: oregon
+    branch: main
+    buildCommand: pip3 install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2
+    plan: free
+    envVars:
+      - key: MODEL_PATH
+        value: models/phishing_model_optimized.pkl
+      - key: MONGODB_URI
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: "*"
+
+  - type: web_service
+    name: phishguard-text
+    env: python
+    region: oregon
+    branch: main
+    buildCommand: pip3 install -r requirements.txt
+    startCommand: gunicorn app_text:app --bind 0.0.0.0:$PORT --workers 2
+    plan: free
+    envVars:
+      - key: MODEL_PATH
+        value: models/phishing_text_model.pkl
+      - key: MONGODB_URI
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: "*"
